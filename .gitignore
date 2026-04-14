@@ -1,0 +1,16 @@
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Claude Code 로컬 설정 (MCP 서버, 권한 등 개인 설정)
+.claude/settings.local.json
+.claude/.credentials*
+
+# 환경 변수 / 시크릿
+.env
+.env.*
+!.env.example
+
+# 노션 연동 관련 로컬 파일
+.notion/
+notion.local.*
