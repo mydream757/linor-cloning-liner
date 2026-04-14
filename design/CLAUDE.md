@@ -93,3 +93,4 @@ Step 6: 산출물 확정
 - `plan/`의 PRD와 기능 명세를 기반으로 디자인한다
 - 개발자가 구현 가능한 수준으로 구체적으로 명세한다
 - 디자인 결정에는 근거를 함께 기술한다 (왜 이 레이아웃인가)
+- **화면 설계 시 [`../architecture/domain-model.md`](../architecture/domain-model.md)의 도메인 모델과 뷰 매핑(Liner / Write / Scholar)을 참조한다.** 세 뷰가 같은 Project / Chat / Asset 데이터 위의 서로 다른 창이라는 통일성을 UX 전반에서 유지한다.

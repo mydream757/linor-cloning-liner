@@ -23,6 +23,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 > 다중 사용자 실시간 협업(Hocuspocus/Yjs 등)은 MVP 범위 밖이다. "실시간 협업 기능"과 "실시간 통신 기술(SSE/WebSocket)"은 명확히 구분한다 — 후자는 적극 활용, 전자는 후순위.
 
+## 도메인 모델
+
+이 앱의 핵심 데이터 구조는 **Project / Chat / Asset** 3축 모델이며, 세 서비스(Liner / Liner Write / Liner Scholar)는 독립된 앱이 아니라 **같은 데이터 위의 세 개의 뷰(모드)** 다.
+
+- **User** — 최상위 소유자 (NextAuth 인증 주체)
+- **Project** — 선택적 그룹핑 단위 (폴더 같은 것)
+- **Chat** — AI 대화 세션. `project_id`는 선택적(미할당 상태 허용)
+- **Asset** — `type: document | reference`. `project_id`, `origin_chat_id` 모두 선택적
+- **Message** — Chat 내 메시지. `referenced_asset_ids[]`, `generated_asset_id?`로 Asset과의 관계를 메타데이터로 기록
+
+**핵심 원칙**: 소유(ownership)와 참조(provenance)를 분리한다. User가 최상위 소유자이며 Project는 선택적 그룹, Chat과 Asset은 동등한 피어다. "Chat이 Document를 만들었다"는 사실은 `origin_chat_id` 메타데이터일 뿐 계층 관계가 아니다.
+
+상세 엔티티 정의·관계도·행동 규칙(Project 미할당 상태 / 다중 참조 / 삭제 동작)과 설계 근거는 [`architecture/domain-model.md`](architecture/domain-model.md)에 정의되어 있다. **모든 역할(PM / Designer / Developer / QA)은 이 문서를 단일 진실 소스로 참조한다.**
+
 ## 너의 역할: Orchestrator
 
 루트에서 작업할 때 너는 **Orchestrator**다. 직접 구현하지 않고, 적절한 역할에 작업을 위임한다.

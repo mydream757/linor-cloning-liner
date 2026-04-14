@@ -16,6 +16,7 @@ Next.js 단일 앱을 사용하는 이 프로젝트에서는 backend/frontend를
 ## 산출물 참조
 
 구현 시 다음 경로에서 관련 문서를 참조한다:
+- **도메인 모델**: [`../architecture/domain-model.md`](../architecture/domain-model.md) ← Prisma 스키마·API 설계·타입 정의의 **단일 진실 소스**. 구현 전 반드시 확인.
 - 기능 명세: `plan/features/[기능명].md`
 - 디자인 명세: `design/features/[기능명].md`
 - API 계약 / 아키텍처 결정: `architecture/decisions/`

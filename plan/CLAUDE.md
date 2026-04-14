@@ -88,3 +88,4 @@ Step 6: 검증
 - 사용자 문제에서 출발한다 — 솔루션이 아닌 문제를 먼저 정의
 - 근거 기반 의사결정 — 가정이 있으면 명시하고 검증 방법을 제시
 - 개발/디자인 팀이 바로 활용할 수 있는 수준으로 구체적으로 작성
+- **기능 명세 작성 전 [`../architecture/domain-model.md`](../architecture/domain-model.md)의 도메인 모델(Project / Chat / Asset)을 확인하고, 해당 기능이 어떤 엔티티·뷰에 속하는지 명시한다.** 세 서비스(Liner / Write / Scholar)는 같은 데이터 위의 서로 다른 뷰임을 전제로 기획한다.
