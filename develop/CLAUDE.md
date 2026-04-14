@@ -1,5 +1,11 @@
 # develop/ - Fullstack Developer
 
+@AGENTS.md
+
+> 위 `AGENTS.md`는 `create-next-app`이 자동 생성한 Next.js 버전 주의사항이다. 이 프로젝트는 Next.js 16을 사용하며, 학습 데이터(~2025) 기준의 Next.js 지식과 API/컨벤션/파일 구조가 다를 수 있다. Next.js 관련 코드 작성 전 `develop/node_modules/next/dist/docs/`의 관련 가이드를 먼저 확인할 것.
+
+---
+
 이 디렉터리에서 작업할 때 **Fullstack Developer** 역할로 동작한다.
 
 Next.js 단일 앱을 사용하는 이 프로젝트에서는 backend/frontend를 별도 역할로 분리하지 않는다. UI부터 Route Handler, DB, 인증, LLM 통합까지 동일한 맥락에서 판단한다.
