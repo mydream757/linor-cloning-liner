@@ -24,7 +24,7 @@ Accepted
 
 **Docker Compose 기반 PostgreSQL 컨테이너**로 구동한다.
 
-리포지토리 루트의 `docker-compose.yml`에 PostgreSQL 서비스를 정의하고, `docker compose up -d`로 기동한다.
+`develop/docker-compose.yml`에 PostgreSQL 서비스를 정의하고, `develop/` 디렉터리에서 `docker compose up -d`로 기동한다.
 
 ## 고려한 대안
 
@@ -62,7 +62,7 @@ Accepted
 - **볼륨**: named volume으로 데이터 영속화 (`docker compose down`만으로는 데이터 유지, `down -v`로 완전 삭제)
 - **기본 DB/사용자/비밀번호**: 환경변수로 지정하며, 개발용 기본값은 `docker-compose.yml`에 평문으로 둔다. 프로덕션 배포 시에는 이 ADR을 갱신할 것.
 
-상세 설정은 리포지토리 루트의 `docker-compose.yml` 참조.
+상세 설정은 `develop/docker-compose.yml` 참조. 이 위치는 루트 배치 원칙(루트에는 AI 오케스트레이션 컨텍스트와 범용 git 설정만 둠)에 따라 컨테이너를 소비하는 역할 디렉터리(`develop/`) 하위로 배치한 결과다.
 
 ## 연관 결정
 
