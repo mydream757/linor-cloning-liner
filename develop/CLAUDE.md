@@ -41,7 +41,31 @@ Next.js 단일 앱을 사용하는 이 프로젝트에서는 backend/frontend를
 - **LLM**: Anthropic 공식 SDK (`@anthropic-ai/sdk`) — 저수준 SSE 스트리밍을 직접 구현하는 것이 학습 목표
 - **배포**: 로컬 개발 전용 (현재 단계)
 
-> 빌드/테스트/린트 커맨드는 실제 프로젝트 초기화(`create-next-app`) 후 이 섹션에 추가한다.
+### 실행 환경 세팅
+
+모든 커맨드는 이 디렉터리(`develop/`)에서 실행한다. `docker-compose.yml`, `.env.example`, Next.js 앱, Prisma 설정이 모두 여기에 공존한다.
+
+**최초 세팅**:
+
+1. DB 컨테이너 기동: `docker compose up -d`
+2. 환경 변수 파일 준비: `cp .env.example .env.local` 후 값 채우기
+3. 의존성 설치: `pnpm install`
+4. Prisma 스키마 작성 후 `pnpm prisma generate && pnpm prisma migrate dev`
+
+**자주 쓰는 커맨드** (모두 `develop/` 기준):
+
+| 용도 | 커맨드 |
+|---|---|
+| 개발 서버 | `pnpm dev` |
+| 프로덕션 빌드 | `pnpm build` |
+| 프로덕션 실행 | `pnpm start` |
+| 린트 | `pnpm lint` |
+| 타입 체크 | `pnpm typecheck` |
+| Prisma 마이그레이션 생성 | `pnpm prisma migrate dev --name <이름>` |
+| Prisma Studio (DB GUI) | `pnpm prisma studio` |
+| DB 컨테이너 기동 | `docker compose up -d` |
+| DB 컨테이너 중지 | `docker compose down` |
+| DB 초기화 (볼륨까지 삭제) | `docker compose down -v` |
 
 ## 판단 기준
 

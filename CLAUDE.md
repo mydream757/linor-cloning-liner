@@ -167,6 +167,7 @@ last_updated: [YYYY-MM-DD]
 - 역할 간 산출물은 서로 참조할 수 있다 (예: 개발자는 plan/의 기능 명세를 참조)
 - 모든 산출물은 한국어로 작성한다
 - `README.md`, `TEMPLATE.md`는 사용자용 문서이다. 작업 시 참조하지 않는다
+- **루트 디렉터리 배치 원칙**: 루트에는 AI 오케스트레이션 컨텍스트(`CLAUDE.md`, `README.md`, `features.md`, `TEMPLATE.md`)와 범용 git 설정(`.gitignore`)만 둔다. 런타임 인프라(예: `docker-compose.yml`)는 이를 소비하는 역할 디렉터리 하위에 둔다(예: `develop/docker-compose.yml`). 역할별로 소유권이 명확하지 않은 공유 인프라가 여러 개 쌓이면 그때 `infra/` 디렉터리 승격을 재평가한다.
 
 ## Git 커밋 컨벤션
 

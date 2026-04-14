@@ -1,0 +1,21 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: linor-cloning-liner-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: linor
+      POSTGRES_PASSWORD: linor_dev
+      POSTGRES_DB: linor_cloning_liner
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U linor -d linor_cloning_liner"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  postgres_data:
