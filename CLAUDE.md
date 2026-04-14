@@ -33,11 +33,10 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 |------|---------------|-------------|
 | Product Manager | `plan/CLAUDE.md` | `plan/` |
 | UI/UX Designer | `design/CLAUDE.md` | `design/` |
-| Backend Developer | `develop/backend/CLAUDE.md` | `develop/backend/` |
-| Frontend Developer | `develop/frontend/CLAUDE.md` | `develop/frontend/` |
+| Fullstack Developer | `develop/CLAUDE.md` | `develop/` |
 | QA Engineer | `qa/CLAUDE.md` | `qa/` |
 
-> `develop/CLAUDE.md`는 backend/frontend 공통 규칙이다. 개발 역할 위임 시 함께 포함한다.
+> 이 프로젝트는 Next.js 단일 앱을 사용하므로 backend/frontend를 별도 역할로 분리하지 않고 **Fullstack Developer 하나로 통합**했다. UI부터 Route Handler, DB, 인증, LLM 통합까지 같은 맥락에서 판단한다.
 
 ### 워크플로우
 
@@ -88,26 +87,26 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 **복합 요청**: "로그인 기능 만들어줘"
 
 ```
-Phase 1: PM → Designer → Backend + Frontend → QA (의존성 순서)
+Phase 1: PM → Designer → Developer → QA (의존성 순서)
 
 Phase 2:
   [순차] PM: 로그인 기능 명세 작성
          ↓ (산출물 전달)
   [순차] Designer: 로그인 화면 설계
          ↓ (산출물 전달)
-  [병렬] Backend: 인증 API 구현  |  Frontend: 로그인 UI 구현
-         ↓ (양쪽 완료 후)
+  [순차] Developer: Route Handler + NextAuth + UI 구현
+         ↓ (완료 후)
   [순차] QA: 로그인 기능 테스트 케이스 작성
 
-Phase 3: API 명세 ↔ 프론트엔드 연동 정합성 확인
+Phase 3: 기능 명세 ↔ 구현 정합성 확인
 Phase 4: 사용자에게 결과 보고
 ```
 
 **단일 역할 요청**: "API 응답 속도 개선해줘"
 
 ```
-Phase 1: Backend 단독 작업
-Phase 2: Backend에 위임
+Phase 1: Developer 단독 작업
+Phase 2: Developer에 위임
 Phase 3: 결과 검토
 Phase 4: 사용자에게 보고
 ```
@@ -124,7 +123,7 @@ design/features/login.md      ← Designer: 로그인 화면 설계
 qa/features/login.md          ← QA: 로그인 테스트 케이스
 ```
 
-develop/는 기술적 구조를 따르며, `features/` 구조에 종속되지 않는다. 문서는 참조만 한다.
+develop/는 기술적 구조(`app/`, `lib/`, `prisma/` 등)를 따르며 `features/` 디렉터리를 별도로 두지 않는다. 구현 시 plan/, design/의 기능 문서를 참조한다.
 
 ### 기능 인덱스
 
