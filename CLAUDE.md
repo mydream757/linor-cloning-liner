@@ -4,80 +4,24 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## 프로젝트 개요
 
-이 저장소는 풀스택 프로젝트 템플릿이다. 각 디렉터리는 소프트웨어 개발 조직의 역할(페르소나)을 나타내며, 루트에서는 이들을 오케스트레이션한다.
+**linor-cloning-liner** — 라이너(Liner)의 세 서비스(Liner / Liner Write / Liner Scholar)를 분석하고, 이를 하나의 Next.js 앱으로 통합 재구현하는 1인 학습용 클론 코딩 프로젝트.
 
-> **초기화 전 상태**: 이 템플릿은 아직 특정 프로젝트에 맞게 초기화되지 않았다. 사용자가 프로젝트 주제를 제시하면 아래의 초기화 프로세스를 따른다.
+### 해결하려는 문제
+1. **학습 관점**: 원본이 세 개의 독립 서비스로 분리한 것을 하나의 Next.js 앱으로 통합했을 때 생기는 구조와 트레이드오프를 직접 구현으로 파악한다.
+2. **프로덕트 관점**: 원본의 약점인 "서비스 간 연동 부족, 컬렉션/문서/채팅 컨텍스트 분리"를 통합 앱 형태로 개선할 수 있는지 시도한다.
 
-## 프로젝트 초기화
+### 대상 사용자
+아이디어 서칭 → 초고 작성 → 브레인스토밍을 반복하며 기획서·제안서·PRD·리서치 문서를 만드는 **스타트업 PM**. 사용자 본인의 자기 시뮬레이션 페르소나이며, 전통적 사용자 리서치는 수행하지 않는다.
 
-이 템플릿을 복사한 후, 사용자가 프로젝트 주제를 제시하면 다음 순서로 초기화한다.
+### 핵심 가치 (트레이드오프 발생 시 우선순위)
 
-### 초기화 변수
+1. **통합성** — 개별 서비스의 기능 깊이보다 세 서비스 간 맥락 연결을 우선
+2. **실시간 UX** — LLM 스트리밍·비동기 UI 완성도를 구현 단순성보다 우선. SSE/WebSocket 등 실시간 통신 기술을 직접 저수준에서 구현하는 것이 학습 목표
+3. **출처 신뢰성** — 인용/출처 추적성을 UI 간결성보다 우선
+4. **속도감(Perceived performance)** — 맥락 전환 비용 최소화를 기능량보다 우선
+5. **[기본 원칙] 학습 가치와 완성도는 트레이드오프가 아닌 기본값** — 둘 다 지키고, 부족하면 스코프를 줄이거나 일정을 늘려서 해결한다. "학습 vs 완성" 맞바꾸기는 선택지가 아니다.
 
-| 변수 | 설명 | 반영 위치 |
-|------|------|----------|
-| `PROJECT_NAME` | 프로젝트명 | 이 파일 프로젝트 개요 |
-| `PROBLEM_STATEMENT` | 해결하려는 문제 | 이 파일 + PM 판단의 출발점 |
-| `TARGET_USERS` | 대상 사용자 | PM, Designer 판단 기준 |
-| `CORE_VALUES` | 핵심 가치/방향성 (트레이드오프 시 우선순위) | 전 역할 판단 기준 |
-| `TECH_STACK` | 기술 스택 (미정 시 스킵) | develop/ CLAUDE.md |
-
-### 초기화 절차
-
-```
-Step 1: 프로젝트 기본 정보
-  - 사용자에게 질문: 프로젝트명, 한 줄 설명
-  → PROJECT_NAME 확정
-
-Step 2: 문제 정의
-  - 사용자에게 질문: 누구의, 어떤 문제를 해결하는가?
-  - PM 역할에 위임하여 문제 정의를 정제할 수도 있음
-  → PROBLEM_STATEMENT 확정
-
-Step 3: 대상 사용자
-  - 사용자에게 질문: 주요 사용자는 누구인가?
-  - 구체적 특성 파악 (연령, 상황, 니즈)
-  → TARGET_USERS 확정
-
-Step 4: 핵심 가치
-  - 사용자에게 질문: 이 서비스에서 가장 중요한 가치는?
-  - 트레이드오프 예시를 제시하여 우선순위 확인
-    (예: "편의성 vs 프라이버시, 어느 쪽이 더 중요한가요?")
-  → CORE_VALUES 확정
-
-Step 5: 기술 스택
-  - 사용자에게 질문: 사용할 기술 스택이 정해져 있는가?
-  - 미정이면 스킵, 나중에 업데이트
-  → TECH_STACK 확정 또는 스킵
-
-Step 6: 역할별 판단 기준 검토
-  - 현재 각 역할의 판단 기준을 사용자에게 제시
-  - 프로젝트 특성에 맞게 조정이 필요한지 확인
-  → 필요시 각 역할 CLAUDE.md의 판단 기준 수정
-
-Step 7: 지표 수집 설정
-  - .claude/settings.json의 OTEL_RESOURCE_ATTRIBUTES에서
-    project.name=CHANGE_ME를 PROJECT_NAME으로 교체
-  → OTel 메트릭에 프로젝트명 라벨 반영
-
-Step 8: 초기화 완료
-  - 이 파일의 프로젝트 개요 섹션 업데이트 (템플릿 안내 문구 제거)
-  - 확정된 변수를 각 CLAUDE.md에 반영
-  - README.md를 프로젝트 문서로 교체 (프로젝트명, 문제 정의, 구조, 기술 스택)
-  - features.md 초기화
-  - 사용자에게 초기화 결과 보고
-```
-
-### 초기화 후 반영 사항
-
-초기화가 완료되면 다음 항목이 업데이트된다:
-
-1. **이 파일** — 프로젝트 개요가 구체적인 프로젝트 설명으로 교체됨
-2. **각 역할 CLAUDE.md** — 프로젝트 컨텍스트(대상 사용자, 핵심 가치)가 판단 기준에 반영됨
-3. **기술 스택** (해당 시) — develop/backend/, develop/frontend/ CLAUDE.md 업데이트
-4. **README.md** — 프로젝트 문서로 교체 (템플릿 가이드는 TEMPLATE.md에 보존)
-5. **features.md** — 빈 상태로 초기화 확인
-6. **.claude/settings.json** — `project.name`이 실제 프로젝트명으로 교체됨
+> 다중 사용자 실시간 협업(Hocuspocus/Yjs 등)은 MVP 범위 밖이다. "실시간 협업 기능"과 "실시간 통신 기술(SSE/WebSocket)"은 명확히 구분한다 — 후자는 적극 활용, 전자는 후순위.
 
 ## 너의 역할: Orchestrator
 
@@ -211,6 +155,93 @@ last_updated: [YYYY-MM-DD]
 - 모든 산출물은 한국어로 작성한다
 - `README.md`, `TEMPLATE.md`는 사용자용 문서이다. 작업 시 참조하지 않는다
 
+## Git 커밋 컨벤션
+
+이 프로젝트의 모든 커밋은 Conventional Commits 기반의 아래 규칙을 따른다.
+
+### 포맷
+
+```
+<type>(<scope>[, <scope>...]): <subject>
+
+<본문 (선택, "왜"를 설명)>
+```
+
+### 원칙
+
+- **하나의 목적 = 하나의 커밋.** type이 다르면(예: `feat` + `fix`) 반드시 커밋을 분할한다. 같은 type이라도 논리적 목적이 다르면 분할한다.
+- **모든 영향받는 scope를 제목에 명시한다.** 임의로 생략하지 않는다. 나열이 지나치게 길어지는 것은 커밋 분할을 검토하라는 신호일 수 있지만, 정당한 cross-cutting 변경이면 나열을 유지한다. `git log --oneline` 제목만으로 영향 범위를 즉시 파악할 수 있어야 한다.
+- **제목은 72자 이내 한국어 명령형.** 끝에 마침표 없음.
+- **본문에는 "왜"를 쓴다.** "무엇"은 diff가 이미 보여준다. trivial한 변경은 본문 생략 가능.
+- **커밋 시점은 사용자의 명시적 요청 시에만.** 오케스트레이터는 커밋을 제안만 하고 실행하지 않는다.
+- **`--no-verify` 등 훅 우회 플래그 금지.** 훅이 실패하면 근본 원인을 수정한다.
+- **발행된 커밋에 amend 금지.** 새 커밋으로 처리한다.
+- **`Co-Authored-By` 트레일러는 항상 생략한다.** 이 프로젝트의 거의 모든 작업이 Claude Code 기반이라 표식이 무의미하다. Claude Code의 빌트인 기본 지침(모든 커밋 끝에 `Co-Authored-By: Claude ... <noreply@anthropic.com>` 자동 추가)을 이 리포지토리에서는 명시적으로 덮어쓴다.
+
+### Type
+
+| type | 용도 |
+|---|---|
+| `feat` | 새 기능 추가 |
+| `fix` | 버그 수정 |
+| `docs` | 문서 변경 (CLAUDE.md, README.md, architecture/, features.md, plan/·design/·qa/의 기능 명세 등) |
+| `refactor` | 동작 변경 없는 코드·구조 재정리 |
+| `chore` | 빌드·설정·의존성·툴링 |
+| `style` | 포맷·공백·세미콜론 등 순수 스타일 |
+| `test` | 테스트 추가/수정 |
+| `perf` | 성능 개선 |
+
+### Scope
+
+모든 scope는 최상위에서 동등한 레벨이다. 필요 시 슬래시(`/`)로 sub-scope를 붙이고, 여러 영역이 하나의 논리적 목적으로 묶이면 콤마(`,`)로 나열한다. 하이픈 허용.
+
+| scope | 대상 | sub-scope 기준 | 예시 |
+|---|---|---|---|
+| `develop` | Next.js 앱 구현 (`app/`, `lib/`, `prisma/` 등) | **도메인 엔티티·기능 영역**이 주축, 인프라성 변경은 레이어 이름 | `develop/chat`, `develop/asset`, `develop/project`, `develop/auth`, `develop/llm`, `develop/ui-shell`, `develop/infra` |
+| `plan` | `plan/` 디렉터리 | 기능명 또는 범용 기획 문서 | `plan/chat`, `plan/priority-matrix` |
+| `design` | `design/` 디렉터리 | 기능명 또는 범용 디자인 산출물 | `design/chat`, `design/tokens`, `design/persona` |
+| `qa` | `qa/` 디렉터리 | 기능명 또는 범용 QA 문서 | `qa/chat`, `qa/strategy`, `qa/bugs` |
+| `architecture` | `architecture/` 디렉터리 | 문서 종류 | `architecture/domain-model`, `architecture/adr` |
+| `context` | AI 협업 컨텍스트 파일 (`CLAUDE.md`, `README.md`, `features.md`, `TEMPLATE.md`) | (없음) | `context` |
+| `infra` | 툴링·설정 파일 (`.gitignore`, `.claude/`, CI 등) | (없음) | `infra` |
+
+**`develop`의 주축이 "엔티티"인 이유**: 대부분의 기능 작업이 여러 기술 레이어를 동시에 건드리기 때문에 기술 레이어 기반 sub-scope는 의미가 희석된다. 도메인 엔티티 기준으로 나누면 "무엇에 대한 작업인가"가 명확해진다.
+
+### 예시
+
+```
+# 하나의 엔티티
+feat(develop/chat): SSE 기반 메시지 스트리밍 응답 구현
+
+# 엔티티에 걸친 연동 변경 (콤마)
+feat(develop/chat, develop/asset): 메시지에서 Asset 참조 기능 추가
+
+# 역할에 걸친 기획·디자인 동시 작성
+docs(plan/chat, design/chat): 채팅 기능 명세 및 화면 설계 초안
+
+# 인프라
+chore(infra): Next.js 15 App Router 프로젝트 초기화
+
+# AI 컨텍스트 문서
+docs(context): 핵심 가치에 출처 신뢰성 축 추가
+
+# 도메인 모델 문서
+docs(architecture/domain-model): Project/Chat/Asset 3축 모델 정의
+```
+
 ## 기술 스택
 
-> 아직 미정. 기술 스택이 결정되면 이 섹션과 `develop/backend/CLAUDE.md`, `develop/frontend/CLAUDE.md`를 업데이트할 것.
+| 영역 | 선택 |
+|---|---|
+| 프레임워크 | Next.js (App Router, 최신 안정화 버전) |
+| 언어 | TypeScript |
+| 스타일링 | Tailwind CSS |
+| 에디터 | TipTap (ProseMirror 기반) |
+| 서버 상태 | React Query (`@tanstack/react-query`) |
+| 클라이언트 상태 | React Context + useState (MVP 1단계 기본). Zustand는 MVP 완성 후 학습 프로세스 2단계에서 부분 도입 |
+| DB | PostgreSQL + Prisma |
+| 인증 | NextAuth |
+| LLM | Anthropic 공식 SDK (`@anthropic-ai/sdk`) — SSE 스트리밍 저수준 직접 구현 |
+| 배포 | 로컬 개발 전용 (현재 단계) |
+
+상세 판단 기준과 워크플로우는 각 역할의 CLAUDE.md를 참조.
