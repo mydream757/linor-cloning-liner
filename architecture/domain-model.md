@@ -1,12 +1,21 @@
 ---
 document: 도메인 모델
-version: 0.1
-last_updated: 2026-04-14
+version: 0.2
+last_updated: 2026-04-15
 ---
 
 # 도메인 모델
 
 이 문서는 **linor-cloning-liner의 핵심 데이터 구조**를 정의한다. 모든 역할(PM / Designer / Developer / QA)이 기능 명세·화면 설계·구현·테스트 설계 시 이 문서를 **단일 진실 소스**로 참조한다.
+
+## 공통 컨벤션
+
+이 절은 모든 엔티티에 일괄 적용되는 규칙이다.
+
+- **ID 형식**: 모든 엔티티의 `id`는 **cuid2** (Prisma `@default(cuid(2))` 또는 동등). URL segment(`/p/[projectId]/liner`)에 그대로 노출되므로 짧고 URL-safe해야 한다. uuid v4(36자에 dash 포함)나 auto-increment int(enumeration 위험)는 채택하지 않는다.
+- **타임스탬프**: 모든 엔티티는 `created_at`을 가진다. 생성 후 수정 가능한 엔티티는 `updated_at`도 가진다 (DB 또는 애플리케이션이 수정 시점에 갱신).
+- **삭제 정책**: **hard delete만 사용한다**. soft delete(`deleted_at` 컬럼 + 필터)는 MVP 범위에서 도입하지 않는다. 1인 학습 프로젝트라 휴지통/복구 UX의 가치보다 스키마·쿼리 복잡도가 더 크다. 필요해지면 별도 ADR로 도입한다.
+- **소유자 검증**: 모든 조회·수정·삭제 쿼리는 `user_id` 일치 여부를 함께 검증한다. 인증 도입(기능 2) 이후 Route Handler 레벨에서 일관 적용.
 
 ## 핵심 원칙
 
@@ -23,6 +32,10 @@ last_updated: 2026-04-14
 - 시스템의 최상위 소유자
 - NextAuth가 관리하는 인증 주체
 - Projects, Chats, Assets를 직접 소유
+- 필드: `id`, `email`, `name?`, `image?`, `created_at`, `updated_at`
+  - `email`은 필수 (로그인 식별자)
+  - `name`, `image`는 OAuth 프로바이더에서 받아오는 값으로 nullable
+- **MVP 1단계(인증 도입 전) 임시 user**: 기능 1 구현 시점에서는 NextAuth가 아직 없으므로, 시드 또는 마이그레이션으로 단일 임시 user를 생성해 두고 모든 엔티티가 그 `user_id`를 사용한다. 기능 2(NextAuth)에서 실제 user 모델로 교체된다.
 
 ### Project
 - **선택적 그룹핑 단위**. 폴더와 비슷하다.
@@ -37,11 +50,15 @@ last_updated: 2026-04-14
 
 ### Message
 - Chat 내 개별 메시지
-- 필드: `id`, `chat_id`, `role` (`user` | `assistant` | `system`), `content`, `created_at`
+- 필드: `id`, `chat_id`, `role` (`user` | `assistant` | `system`), `content`, `created_at`, `updated_at`
 - 참조 메타데이터:
   - `referenced_asset_ids[]`: 이 메시지가 컨텍스트로 사용한 Asset 목록
   - `generated_asset_id?`: 이 메시지가 생성한 Asset (어시스턴트 응답이 새 Document를 만든 경우 등)
 - 출처(citation) 정보: 응답 본문 내 `[n]` 마커와 대응되는 배열. Liner 뷰의 출처 배지가 이 데이터를 읽는다.
+- **`updated_at`이 변하는 시점** (사용자 직접 편집은 MVP 범위 밖):
+  - SSE 스트리밍 중 어시스턴트 응답이 청크 단위로 incremental persist될 때
+  - 응답 생성 완료 후 citation 메타데이터·`generated_asset_id`가 부착될 때
+  - 재생성(regenerate) 흐름에서 응답 본문이 교체될 때 (있을 경우)
 
 ### Asset (Polymorphic)
 - 프로젝트의 자산. 두 가지 타입이 있다.
@@ -118,4 +135,5 @@ Project는 "필요할 때 붙이는 그룹핑"이지 "반드시 먼저 만들어
 
 ## Changelog
 
+- 0.2 (2026-04-15): 공통 컨벤션 절 신설(ID 형식 cuid2, 타임스탬프 정책, hard delete, 소유자 검증). User 엔티티 필드 명시(email/name/image/timestamps)와 MVP 1단계 임시 user 정책 추가. Message에 `updated_at` 추가 및 변경 시점(스트리밍 청크 누적, citation 부착, 재생성) 명시.
 - 0.1 (2026-04-14): 초안 작성. Project / Chat / Asset 3축 모델, 소유-참조 분리 원칙, 뷰 매핑 및 행동 규칙 정의.
