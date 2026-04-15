@@ -1,6 +1,6 @@
 ---
 feature: 통합 앱 셸 + Project 생성/전환
-version: 0.2
+version: 0.3
 last_updated: 2026-04-15
 ---
 
@@ -165,7 +165,28 @@ last_updated: 2026-04-15
 | Q4 | 임시 단일 user 시드 방식: Prisma seed script vs 최초 마이그레이션 raw SQL | 기능 2에서 교체될 일회성 코드라 구현자 재량 | 구현 단계 | Developer |
 | Q5 | Project 삭제 confirm의 카피 (단순 "정말 삭제할까요?" 수준이면 충분한가) | Asset이 쌓이기 전에는 과한 안전장치 불필요 | 기능 4 구현 완료 후 재평가 | PM |
 
+## 8. 구현 단계 (D-stages)
+
+이 섹션은 기능 1을 Developer가 어떤 순서로 구현할지에 대한 로드맵이다. PM 관점에서 "이 기능을 점진적으로 어떻게 가져갈 것인가"를 기록하며, 각 단계는 **구현 전 합의 → 구현 → 결정 문서화 → 커밋**의 공통 사이클을 따른다.
+
+각 단계의 구체 설계 결정은 해당 단계에 대응하는 ADR(`architecture/decisions/`)과 notes(`architecture/notes/`)에 박힌다. 이 섹션은 "무엇을 언제"의 개괄이며 "어떻게"는 각 단계의 ADR에 위임한다.
+
+| # | 단계 | 목표 | 포함 | 제외 (이후 단계) |
+|---|---|---|---|---|
+| D1 | Prisma 스키마 + 마이그레이션 + dev user 시드 | DB 계층 바닥 잡기 | User·Project 엔티티, 첫 마이그레이션, 임시 user seed, Prisma Client 싱글톤 | Chat·Asset 엔티티 (기능 3·4) |
+| D2 | App Router 구조 뼈대 | 모든 후속 기능이 올라탈 라우트·토큰·레이아웃 껍데기 | globals.css `@theme` 토큰, root layout/page, `/p/[projectId]/*` 라우트, 사이드바·헤더·뷰 토글·빈 상태 스켈레톤 | Server Actions (D3), 인터랙션 (D4~) |
+| D3 | Server Actions + cookie + NewProjectForm | 데이터 변경 능력과 첫 mutation UI | `createProject`/`renameProject`/`deleteProject`, `setLastLocation`, `<LastLocationTracker />`, `<NewProjectForm />`, zod 검증, `ActionResult<T>`, `revalidatePath` | 사이드바 rename/delete UI (D4), 생성 모달 승격 (D6) |
+| D4 | 사이드바 interactive 전체 | Project 항목의 조작(rename, delete, context menu, confirm dialog) 완성 | `<ProjectItem />` 클라 분리, Radix DropdownMenu, HTML `<dialog>`, 중앙 집중 `editingId`, pessimistic update, 인라인 에러 표시 | 사이드바 접힘 (D5), 생성 모달 승격 (D6) |
+| D5 | 사이드바 접힘 토글 | 접힘/펼침 UX + 햄버거 재열기 | 클라이언트 토글 버튼, width transition(`motion-medium`), 내용 `overflow: hidden` | — |
+| D6 | Project 생성 모달 승격 | 빈 상태·사이드바의 form을 디자인 명세의 모달로 전환 | HTML `<dialog>` 기반 생성 모달, autofocus, ESC 닫기, 기존 `<NewProjectForm />` 재사용 | — |
+| D7 | 종합 검증 | 기능 1 전체 자체 검증과 `features.md` 완료 표기 | Golden path + 주요 엣지 케이스 수동 검증, 접근성 점검, 타입체크/린트/브라우저 확인, `features.md` 상태 갱신 | — |
+
+### 변경 규율
+
+이 섹션의 **모든 변경은 반드시 Changelog 엔트리와 근거를 수반**한다. 계획이 문서에 존재하지 않으면 변경 추적도 불가능하므로, 단계 번호·범위·통합·분리 어느 종류든 문서 반영 없이 진행하지 않는다. 이는 프로젝트 전반의 "계획 변경에는 합리적 이유와 의사결정 문서가 수반되어야 한다" 원칙의 구체 적용이다.
+
 ## Changelog
 
+- 0.3 (2026-04-15): "8. 구현 단계 (D-stages)" 섹션 신설. 지금까지 Developer 단계의 작업 순서가 대화 안에만 존재해 계획 변경 시 근거 추적이 불가능한 상태였다(의사결정 문서화 원칙 위반). 현재 효력 있는 로드맵 D1~D7을 문서로 영속화한다. 영속화 과정에서 한 건의 실제 변경을 같이 반영했다 — 원래 D4(사이드바 rename+context menu 구조)와 D7(삭제 confirm+rename 키보드 디테일)이 분리돼 있었으나, "사이드바 interactive"라는 단일 사용자 가치를 두 단계로 쪼개면 같은 `<ProjectItem />` 컴포넌트를 두 번 리팩터해야 하는 비효율이 생기므로 D4로 통합하고 원 D8(종합 검증)을 D7로 번호 이동. D4의 구체 설계 결정(Radix DropdownMenu / HTML `<dialog>` / 중앙 `editingId` / pessimistic update)은 ADR-0010에서 별도 다룬다. 이 섹션의 모든 후속 변경은 Changelog 엔트리 + 근거 작성 의무.
 - 0.2 (2026-04-15): 디자인 레퍼런스 수집 결과 반영. 다크 모드 기본화(라이트 제외로 재분류), 상위 뷰 토글의 Scholar pill 스타일 차용 명시, 디자인 레퍼런스 대상으로 Liner Scholar 지정, 목록 "더보기" 패턴과 접힘 상태 UX 명세 추가.
 - 0.1 (2026-04-15): 초안 작성. B안 스코프, URL Segment + cookie 영속, 성공 기준 13개, 열린 질문 6개 정의.
