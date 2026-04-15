@@ -1,6 +1,6 @@
 ---
 feature: 통합 앱 셸 + Project 생성/전환
-version: 0.1
+version: 0.2
 last_updated: 2026-04-15
 ---
 
@@ -62,10 +62,15 @@ last_updated: 2026-04-15
   - 전환 (목록 항목 클릭 → 해당 Project의 현재 뷰로 이동)
   - **이름 변경 (rename)** — 인라인 편집 또는 컨텍스트 메뉴 중 하나 (디자인 단계 결정)
   - **삭제** — 단순 confirm 다이얼로그
+  - **목록 최대 표시 개수**: 사이드바는 최근 N개(디자인 단계에서 원본 기준 확정, 현 관찰값 3개)까지 노출하고, 그 이상은 "더보기" 행을 통해 펼친다. 원본 Liner Scholar의 "더보기" 패턴을 차용.
 - **뷰 전환**
   - 세 뷰(Liner / Write / Scholar) 토글 버튼
   - 각 뷰 본문은 **placeholder**: "Liner 뷰 — 추후 구현" 같은 안내. 본문 구현은 기능 3·5·6에서.
   - **기본 뷰는 Liner로 고정**한다. Project 생성 직후 진입점, Project 전환 시 뷰 상태가 없는 경우의 fallback 모두 Liner. 사용자별 기본 뷰 설정은 오버엔지니어링이라 도입하지 않는다 (불편이 관찰되면 2차 후보로).
+  - **상위 뷰 토글은 우리 앱의 발명**이다. 원본 라이너의 세 서비스(Liner / Liner Write / Liner Scholar)는 독립 도메인으로 분리되어 있어 셋을 가로지르는 단일 토글이 존재하지 않는다. 우리는 원본 Liner Scholar 내부의 "파일 / 편집 / 채팅" pill 토글 **스타일을 차용**해 상단 헤더에 배치한다. 시각 일관성을 얻고 사용자 학습 곡선을 낮추는 것이 목적.
+- **접힘 상태 UX**
+  - 사이드바 접힘(48px)에서 노출되는 요소는 **사이드바 재열기 버튼과 뷰 전환 토글 아이콘**뿐이다. Project 목록·rename·생성 등 나머지 조작은 사이드바를 다시 펼쳐야 한다.
+  - 접힘 상태는 "잠깐 메인 패널에 집중하고 싶을 때"의 모드이며, 장시간 사용 상태가 아니라는 설계 가정.
 - **영속**
   - 현재 Project와 뷰는 URL segment에 싣는다 (`/p/[projectId]/(liner|write|scholar)`)
   - "마지막에 본 위치"를 cookie에 저장 (`last-project`, `last-view`)
@@ -73,6 +78,10 @@ last_updated: 2026-04-15
 - **빈 상태**
   - Project가 0개일 때: 메인 패널에 "첫 Project를 만들어보세요" 안내 + Project 생성 CTA
   - cookie의 `last-project`가 가리키는 Project가 더는 존재하지 않을 때: 빈 상태로 보내고 cookie 정리
+
+### 테마
+
+**다크 모드를 기본이자 유일한 테마로 한다.** 레퍼런스 대상인 Liner Scholar가 다크를 기본으로 제공하고 있어, 원본 시각 언어를 가장 충실히 재현하는 경로가 다크다. 라이트/다크 토글은 MVP 범위 밖이며, 필요성이 드러나면 2차 후보로.
 
 ### 제외 (비-스코프)
 아래 항목들은 **1차 MVP에서 의도적으로 제외**한다. 필요성이 드러나면 2차 후보로 재평가.
@@ -86,7 +95,7 @@ last_updated: 2026-04-15
 | 각 뷰의 본문 (Liner/Write/Scholar) | 기능 3·5·6의 책임 |
 | 사이드바의 최근 Chat·Asset 목록 | 2차 후보 |
 | 다중 디바이스 간 "마지막 위치" 동기화 | 1인 학습 프로젝트 범위 밖 |
-| 다크모드·테마 | 원본 라이너 UI(라이트)만 재현 |
+| 라이트 모드 / 테마 토글 | 원본 Scholar가 다크 기본이라 원본 시각 재현에 불필요 |
 
 ## 4. 성공 기준 (Acceptance Criteria)
 
@@ -122,6 +131,9 @@ last_updated: 2026-04-15
 | 삭제 정책 | hard delete | 도메인 모델 공통 컨벤션 |
 | 임시 단일 user | 기능 2(NextAuth) 통합 전까지 시드 또는 마이그레이션으로 생성한 임시 user의 `user_id`를 모든 엔티티에 사용 | 도메인 모델 User 섹션 |
 | 패키지 매니저 / DB | pnpm / Docker PostgreSQL | ADR-0001, ADR-0002 |
+| 디자인 레퍼런스 대상 | **Liner Scholar**를 기준 서비스로 삼는다. Scholar가 세 서비스(Liner / Write / Scholar)의 기능을 정신적으로 계승하는 가장 통합된 형태라서, 레퍼런스 수집·시각 토큰·인터랙션 패턴의 일관된 출처가 된다. | [design/references/1-app-shell/measurements.md](../../design/references/1-app-shell/measurements.md) |
+| 상위 뷰 토글 스타일 | 원본 Scholar 내부 "파일/편집/채팅" pill 토글의 **스타일을 차용**해 상단 헤더에 배치. 원본에는 없는 우리 앱의 발명이지만 시각 일관성을 위해 Scholar의 디자인 언어를 따른다. | 측정값: measurements.md 뷰 전환 토글 섹션 |
+| 테마 | 다크 모드 기본·유일 (섹션 3.테마 참조) | 원본 Scholar 기본 테마 |
 
 ## 6. 의존·후속 영향
 
@@ -155,4 +167,5 @@ last_updated: 2026-04-15
 
 ## Changelog
 
+- 0.2 (2026-04-15): 디자인 레퍼런스 수집 결과 반영. 다크 모드 기본화(라이트 제외로 재분류), 상위 뷰 토글의 Scholar pill 스타일 차용 명시, 디자인 레퍼런스 대상으로 Liner Scholar 지정, 목록 "더보기" 패턴과 접힘 상태 UX 명세 추가.
 - 0.1 (2026-04-15): 초안 작성. B안 스코프, URL Segment + cookie 영속, 성공 기준 13개, 열린 질문 6개 정의.
