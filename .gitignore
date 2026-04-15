@@ -5,6 +5,7 @@
 # Claude Code 로컬 설정 (MCP 서버, 권한 등 개인 설정)
 .claude/settings.local.json
 .claude/.credentials*
+.claude/scheduled_tasks.lock
 
 # 환경 변수 / 시크릿
 .env
