@@ -88,16 +88,21 @@ function DisplayMode({
           >
             <DropdownMenu.Item
               onSelect={onStartEdit}
-              className="flex h-7 cursor-default items-center rounded px-2 outline-none data-[highlighted]:bg-bg-hover"
+              className="flex h-7 cursor-default items-center rounded px-2 outline-none data-highlighted:bg-bg-hover"
             >
               이름 변경
             </DropdownMenu.Item>
             <DropdownMenu.Item
-              onSelect={(event) => {
-                event.preventDefault()
-                dialogRef.current?.showModal()
+              onSelect={() => {
+                // Radix가 메뉴를 자연스럽게 닫도록 preventDefault 생략.
+                // setTimeout(0)으로 현재 tick에서 메뉴 close·focus 복귀가 끝난
+                // 뒤 다음 tick에 dialog.showModal을 호출한다. 동시에 호출하면
+                // Radix의 dismissable-layer가 dialog backdrop 클릭을 먼저
+                // 소비해 사용자가 backdrop을 두 번 클릭해야 닫히는 버그가
+                // 재현된다.
+                setTimeout(() => dialogRef.current?.showModal(), 0)
               }}
-              className="flex h-7 cursor-default items-center rounded px-2 outline-none data-[highlighted]:bg-bg-hover"
+              className="flex h-7 cursor-default items-center rounded px-2 outline-none data-highlighted:bg-bg-hover"
             >
               삭제
             </DropdownMenu.Item>
