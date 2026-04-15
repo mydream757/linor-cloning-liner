@@ -4,6 +4,7 @@
 // - 본문: Project 목록 (별도 ProjectList로 분리, ADR-0007 React.cache 패턴과 정렬)
 // - 디자인: design/features/1-app-shell.md
 
+import { NewProjectForm } from '@/components/app-shell/new-project-form'
 import { ProjectList } from '@/components/app-shell/project-list'
 
 export function Sidebar({ currentProjectId }: { currentProjectId: string }) {
@@ -16,14 +17,9 @@ export function Sidebar({ currentProjectId }: { currentProjectId: string }) {
         linor-cloning-liner
       </div>
 
-      <button
-        type="button"
-        disabled
-        className="mx-2 rounded-[var(--radius-md)] bg-surface-overlay px-2 py-2 text-left text-sm text-text-primary disabled:opacity-60"
-        title="Project 생성은 기능 1 D3에서 구현됩니다"
-      >
-        + 새 Project
-      </button>
+      <div className="mx-2">
+        <NewProjectForm />
+      </div>
 
       <div className="flex flex-col gap-1">
         <div className="px-2 py-1 text-xs uppercase tracking-wide text-text-secondary">

@@ -5,6 +5,7 @@
 
 import { notFound } from 'next/navigation'
 
+import { LastLocationTracker } from '@/components/app-shell/last-location-tracker'
 import { Sidebar } from '@/components/app-shell/sidebar'
 import { TopHeader } from '@/components/app-shell/top-header'
 import { getDevUser } from '@/lib/dev-user'
@@ -32,6 +33,7 @@ export default async function ProjectLayout({
         <TopHeader currentProjectId={projectId} />
         <main className="flex-1 min-h-0 overflow-auto">{children}</main>
       </div>
+      <LastLocationTracker projectId={projectId} />
     </div>
   )
 }
