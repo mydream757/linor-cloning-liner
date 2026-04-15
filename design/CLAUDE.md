@@ -20,15 +20,48 @@
 
 ## 산출물 경로 및 템플릿
 
-기능 단위 문서는 `features/[기능명].md`에 저장한다. 프로젝트 단위 문서는 디렉터리 루트에 저장한다.
+기능 단위 문서는 `features/[N]-[기능-slug].md`에 저장한다. 프로젝트 단위 문서는 디렉터리 루트에 저장한다. 디자인 레퍼런스(원본 UI 스크린샷·실측 메타데이터)는 `references/[N]-[기능-slug]/`에 기능별 폴더로 저장한다.
 
 | 산출물 | 템플릿 | 저장 위치 |
 |--------|--------|----------|
-| 화면 설계 / 사용자 흐름 | `templates/feature.md` | `features/[기능명].md` |
-| 디자인 토큰 | `templates/design-tokens.md` | `design-tokens.md` |
+| 화면 설계 / 사용자 흐름 | `templates/feature.md` | `features/[N]-[기능-slug].md` |
+| 전역 디자인 토큰 | `templates/design-tokens.md` | `design-tokens.md` |
 | 사용자 페르소나 | `templates/persona.md` | `persona.md` |
+| 디자인 레퍼런스 (기능 고유) | (인라인) | `references/[N]-[기능-slug]/measurements.md` + `screenshots/` |
 
 문서 작성 시 반드시 해당 템플릿을 기반으로 작성하며, 루트의 문서 표준 형식(프론트매터 + Changelog)을 준수한다.
+
+## 디자인 레퍼런스 수집
+
+이 프로젝트의 기준 디자인 시스템은 **라이너 원본 UI**다. 디자인 명세를 쓰기 전 원본에서 픽셀·색·토큰을 실측해 두는 단계를 "디자인 레퍼런스 수집"이라 부른다. 이 단계는 디자인 중 상태의 초반에 수행되며, 별도 `features.md` 상태로 승격하지 않는다.
+
+### 원칙
+
+- **전역 토큰(color·typography·spacing·radius·shadow·motion)은 `design-tokens.md` 한 곳에서만 정의한다.** 기능 명세는 전역 토큰을 **이름으로 참조**하고 값을 복붙하지 않는다.
+- **기능 고유 치수·상태(사이드바 폭 260px, Project 항목 높이 36px, 빈 상태 레이아웃 등)는 `references/[N]-[기능-slug]/measurements.md`에만 둔다.** 이 파일에는 "어떤 전역 토큰을 쓰는가"와 "기능에만 있는 치수"만 담는다.
+- **확신 없는 값은 빈칸 또는 `(미확인)`으로 남긴다.** 추측값이 토큰으로 굳는 것이 가장 큰 위험.
+- 각 측정값에는 **출처**를 함께 기록한다 (`devtools`, `스크린샷 추정`, `카탈로그`).
+- 스크린샷 파일명은 `NN-짧은-설명.png` (예: `01-empty-state.png`). 정렬과 비교를 쉽게 하기 위함.
+
+### 워크플로우
+
+```
+Step A: 스크린샷 캡처
+  - 사용자가 원본 서비스의 대표 상태를 3~N장 캡처
+  - references/[N]-[기능-slug]/screenshots/ 에 저장
+
+Step B: 실측
+  - 브라우저 devtools로 필요한 값 추출
+  - 값을 두 바구니로 분류:
+    · 전역 후보 (재사용될 토큰) → design-tokens.md에 추가·확인
+    · 기능 고유 → references/[N]-[기능-slug]/measurements.md에 기록
+
+Step C: 디자인 명세 작성
+  - features/[N]-[기능-slug].md를 작성하며 전역 토큰을 이름으로 참조
+  - 기능 고유 치수는 measurements.md를 참조
+```
+
+기능 1에서는 `design-tokens.md`가 아직 비어있으므로 Step B에서 전역 토큰을 **처음으로 채우는** 부트스트랩이 함께 일어난다. 기능 2 이후에는 이미 있는 전역 토큰과 일치하는지 확인만 하고, 새 값이 나오면 전역에 추가한다.
 
 ## 판단 기준
 
