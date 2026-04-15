@@ -1,0 +1,40 @@
+// Prisma schema — linor-cloning-liner
+// 공통 컨벤션: architecture/domain-model.md v0.3
+// - ID 형식: cuid (Prisma 네이티브 v1)
+// - 삭제 정책: hard delete
+// - 타임스탬프: createdAt / updatedAt (camelCase, DB 컬럼은 @map으로 snake_case)
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  image     String?
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  projects Project[]
+
+  @@map("users")
+}
+
+model Project {
+  id     String @id @default(cuid())
+  userId String @map("user_id")
+  name   String @db.VarChar(100)
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt @map("updated_at")
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@map("projects")
+}
