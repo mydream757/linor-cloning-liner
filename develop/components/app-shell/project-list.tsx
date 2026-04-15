@@ -1,14 +1,16 @@
 // Project 목록 (Server Component).
 // - listProjectsByUser는 React.cache 래핑. layout/page에서 다시 불러도 dedupe (ADR-0007).
-// - 항목 라벨은 Next.js <Link>로. 클릭 시 해당 Project의 현재 뷰(D2에선 /liner 고정)로 이동.
-// - rename 인라인 편집·컨텍스트 메뉴·삭제는 D4·D7에서 도입.
+// - 데이터 fetch는 서버에서, 인터랙티브 렌더는 <ProjectListClient />로 위임 (ADR-0010).
 
-import Link from 'next/link'
-
+import { ProjectListClient } from '@/components/app-shell/project-list-client'
 import { getDevUser } from '@/lib/dev-user'
 import { listProjectsByUser } from '@/lib/queries/project'
 
-export async function ProjectList({ currentProjectId }: { currentProjectId: string }) {
+export async function ProjectList({
+  currentProjectId,
+}: {
+  currentProjectId: string
+}) {
   const devUser = await getDevUser()
   const projects = await listProjectsByUser(devUser.id)
 
@@ -20,25 +22,5 @@ export async function ProjectList({ currentProjectId }: { currentProjectId: stri
     )
   }
 
-  return (
-    <ul className="flex flex-col">
-      {projects.map((project) => {
-        const isActive = project.id === currentProjectId
-        return (
-          <li key={project.id}>
-            <Link
-              href={`/p/${project.id}/liner`}
-              aria-current={isActive ? 'page' : undefined}
-              title={project.name}
-              className={`flex h-7.5 items-center gap-2 rounded-md px-2 text-[13px] text-text-primary hover:bg-bg-hover ${
-                isActive ? 'bg-bg-active-subtle font-medium' : ''
-              }`}
-            >
-              <span className="truncate">{project.name}</span>
-            </Link>
-          </li>
-        )
-      })}
-    </ul>
-  )
+  return <ProjectListClient projects={projects} currentProjectId={currentProjectId} />
 }
