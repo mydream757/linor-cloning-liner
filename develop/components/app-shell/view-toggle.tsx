@@ -29,7 +29,7 @@ export function ViewToggle({ currentProjectId }: { currentProjectId: string }) {
 
   return (
     <nav
-      className="flex items-center gap-1 rounded-[var(--radius-lg)] bg-surface-overlay p-1"
+      className="flex items-center gap-1 rounded-lg bg-surface-overlay p-1"
       aria-label="뷰 전환"
     >
       {VIEWS.map(({ key, label }) => {
@@ -39,7 +39,7 @@ export function ViewToggle({ currentProjectId }: { currentProjectId: string }) {
             key={key}
             href={`/p/${currentProjectId}/${key}`}
             aria-current={isActive ? 'page' : undefined}
-            className={`flex h-7 items-center rounded-[var(--radius-md)] px-3 text-[13px] transition-colors ${
+            className={`flex h-7 items-center rounded-md px-3 text-[13px] transition-colors ${
               isActive
                 ? 'bg-bg-active-strong text-text-primary shadow'
                 : 'text-text-tertiary hover:text-text-secondary'

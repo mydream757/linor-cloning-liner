@@ -10,7 +10,7 @@ import { ProjectList } from '@/components/app-shell/project-list'
 export function Sidebar({ currentProjectId }: { currentProjectId: string }) {
   return (
     <aside
-      className="flex w-[260px] shrink-0 flex-col gap-3 border-r border-border-default bg-bg-secondary px-2 py-3"
+      className="flex w-65 shrink-0 flex-col gap-3 border-r border-border-default bg-bg-secondary px-2 py-3"
       aria-label="앱 사이드바"
     >
       <div className="px-2 py-1 text-sm font-semibold text-text-primary">

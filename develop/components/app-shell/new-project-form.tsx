@@ -28,12 +28,12 @@ export function NewProjectForm({ autoFocus = false }: { autoFocus?: boolean }) {
           autoFocus={autoFocus}
           aria-invalid={nameError ? true : undefined}
           aria-describedby={nameError ? 'new-project-error' : undefined}
-          className="h-9 flex-1 min-w-0 rounded-[var(--radius-md)] bg-surface-overlay px-3 text-sm text-text-primary placeholder:text-text-tertiary"
+          className="h-9 flex-1 min-w-0 rounded-md bg-surface-overlay px-3 text-sm text-text-primary placeholder:text-text-tertiary"
         />
         <button
           type="submit"
           disabled={pending}
-          className="h-9 shrink-0 rounded-[var(--radius-md)] bg-bg-active-strong px-3 text-sm text-text-primary disabled:opacity-60"
+          className="h-9 shrink-0 rounded-md bg-bg-active-strong px-3 text-sm text-text-primary disabled:opacity-60"
         >
           {pending ? '만드는 중…' : '만들기'}
         </button>
