@@ -127,7 +127,7 @@ last_updated: 2026-04-15
 | 라우팅 | URL Segment 방식 (`/p/[projectId]/(liner\|write\|scholar)`) | [ADR-0003](../../architecture/decisions/0003-view-switching-via-url-segment.md) |
 | 영속 저장 | cookie에 `last-project`, `last-view` 저장, 서버 컴포넌트에서 동기적 redirect | [ADR-0004](../../architecture/decisions/0004-last-location-via-cookie.md) |
 | Project/User 필드 | `architecture/domain-model.md` v0.2의 정의를 따름 | [domain-model.md](../../architecture/domain-model.md) |
-| ID 형식 | cuid2 | 도메인 모델 공통 컨벤션 |
+| ID 형식 | cuid (Prisma `@default(cuid())`, v1) | 도메인 모델 공통 컨벤션 |
 | 삭제 정책 | hard delete | 도메인 모델 공통 컨벤션 |
 | 임시 단일 user | 기능 2(NextAuth) 통합 전까지 시드 또는 마이그레이션으로 생성한 임시 user의 `user_id`를 모든 엔티티에 사용 | 도메인 모델 User 섹션 |
 | 패키지 매니저 / DB | pnpm / Docker PostgreSQL | ADR-0001, ADR-0002 |

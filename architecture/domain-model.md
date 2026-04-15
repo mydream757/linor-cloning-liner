@@ -1,6 +1,6 @@
 ---
 document: 도메인 모델
-version: 0.2
+version: 0.3
 last_updated: 2026-04-15
 ---
 
@@ -12,7 +12,7 @@ last_updated: 2026-04-15
 
 이 절은 모든 엔티티에 일괄 적용되는 규칙이다.
 
-- **ID 형식**: 모든 엔티티의 `id`는 **cuid2** (Prisma `@default(cuid(2))` 또는 동등). URL segment(`/p/[projectId]/liner`)에 그대로 노출되므로 짧고 URL-safe해야 한다. uuid v4(36자에 dash 포함)나 auto-increment int(enumeration 위험)는 채택하지 않는다.
+- **ID 형식**: 모든 엔티티의 `id`는 **cuid** (Prisma `@default(cuid())`, cuid v1). URL segment(`/p/[projectId]/liner`)에 그대로 노출되므로 짧고 URL-safe해야 한다. cuid2는 별도 라이브러리가 필요하고 cuid1과 실용적 차이가 거의 없어 Prisma 네이티브 지원을 따른다. uuid v4(36자에 dash 포함)나 auto-increment int(enumeration 위험)는 채택하지 않는다.
 - **타임스탬프**: 모든 엔티티는 `created_at`을 가진다. 생성 후 수정 가능한 엔티티는 `updated_at`도 가진다 (DB 또는 애플리케이션이 수정 시점에 갱신).
 - **삭제 정책**: **hard delete만 사용한다**. soft delete(`deleted_at` 컬럼 + 필터)는 MVP 범위에서 도입하지 않는다. 1인 학습 프로젝트라 휴지통/복구 UX의 가치보다 스키마·쿼리 복잡도가 더 크다. 필요해지면 별도 ADR로 도입한다.
 - **소유자 검증**: 모든 조회·수정·삭제 쿼리는 `user_id` 일치 여부를 함께 검증한다. 인증 도입(기능 2) 이후 Route Handler 레벨에서 일관 적용.
@@ -135,5 +135,6 @@ Project는 "필요할 때 붙이는 그룹핑"이지 "반드시 먼저 만들어
 
 ## Changelog
 
+- 0.3 (2026-04-15): ID 형식을 `cuid2` → `cuid`(Prisma 네이티브 v1)로 정정. cuid2는 별도 라이브러리 필요하고 실용적 차이 없어 Prisma 네이티브 지원을 따른다.
 - 0.2 (2026-04-15): 공통 컨벤션 절 신설(ID 형식 cuid2, 타임스탬프 정책, hard delete, 소유자 검증). User 엔티티 필드 명시(email/name/image/timestamps)와 MVP 1단계 임시 user 정책 추가. Message에 `updated_at` 추가 및 변경 시점(스트리밍 청크 누적, citation 부착, 재생성) 명시.
 - 0.1 (2026-04-14): 초안 작성. Project / Chat / Asset 3축 모델, 소유-참조 분리 원칙, 뷰 매핑 및 행동 규칙 정의.
