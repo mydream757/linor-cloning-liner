@@ -27,20 +27,31 @@ Accepted
 - 스키마: `develop/prisma/schema.prisma`
 - 마이그레이션: `develop/prisma/migrations/`
 - 시드: `develop/prisma/seed.ts`
+- **설정 파일**: `develop/prisma.config.ts` — Prisma 7부터 `datasource.url`과 `migrations.seed`가 이 파일로 이동됐다. `process.loadEnvFile()`로 `.env`를 명시적으로 로드해야 한다(Prisma 7 config는 자동 로드하지 않음). 자세한 배경은 [notes/prisma7-config-migration.md](../notes/prisma7-config-migration.md) 참조
 - 커맨드는 모두 `develop/` 디렉터리에서 `pnpm prisma ...`로 실행
 
-**2. Prisma Client 싱글톤**: `develop/lib/prisma.ts`에 `globalThis` 기반 싱글톤 패턴을 구현. 모든 Server Component·Server Action·Route Handler는 이 파일에서 client를 import.
+**2. Prisma Client 싱글톤 + driver adapter**: `develop/lib/prisma.ts`에 `globalThis` 기반 싱글톤 패턴을 구현하되, **Prisma 7부터 `new PrismaClient()`는 adapter 인자가 필수**이므로 `@prisma/adapter-pg`의 `PrismaPg`를 어댑터로 전달한다. 모든 Server Component·Server Action·Route Handler는 이 파일에서 client를 import.
 
 ```ts
-// develop/lib/prisma.ts (대략)
+// develop/lib/prisma.ts
+import { PrismaPg } from '@prisma/adapter-pg'
 import { PrismaClient } from '@prisma/client'
 
 const globalForPrisma = globalThis as unknown as { prisma?: PrismaClient }
 
-export const prisma = globalForPrisma.prisma ?? new PrismaClient()
+function createPrismaClient() {
+  const connectionString = process.env.DATABASE_URL
+  if (!connectionString) throw new Error('DATABASE_URL is not set')
+  const adapter = new PrismaPg({ connectionString })
+  return new PrismaClient({ adapter })
+}
+
+export const prisma = globalForPrisma.prisma ?? createPrismaClient()
 
 if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = prisma
 ```
+
+Prisma 7의 adapter 필수화 배경과 왜 `@prisma/adapter-pg`인지는 [notes/prisma7-config-migration.md](../notes/prisma7-config-migration.md) 브레이킹 체인지 3번 섹션 참조.
 
 ## 고려한 대안
 
