@@ -1,5 +1,5 @@
 ---
-version: 0.2
+version: 0.3
 last_updated: 2026-04-15
 source: 라이너 원본 서비스 Liner Scholar (scholar.liner.com)
 ---
@@ -48,7 +48,7 @@ source: 라이너 원본 서비스 Liner Scholar (scholar.liner.com)
 | 토큰명 | 값 | 출처 | 용도 |
 |--------|---|---|------|
 | color-bg-hover | `rgba(109,109,112,0.12)` | devtools — `neutral-fill-overlay-lowest-hover` | hover 상태 일반 |
-| color-bg-active-subtle | `#272729` | 추정 — `neutral-container-lowest-hover` | 사이드바 내 선택 상태 (주변 배경보다 한 톤 밝게) |
+| color-bg-active-subtle | `rgba(255,255,255,0.07)` | 결정 (v0.3, 사용자 피드백) | 사이드바 내 선택 상태 (주변 배경 위 7% 흰색 오버레이) |
 | color-bg-active-strong | `rgba(233,233,235,0.24)` | devtools — pill 활성 버튼 | 명확한 선택 강조 (pill 활성 버튼) |
 
 ### 텍스트
@@ -133,5 +133,6 @@ source: 라이너 원본 서비스 Liner Scholar (scholar.liner.com)
 
 ## Changelog
 
+- 0.3 (2026-04-15): `color-bg-active-subtle`을 `#272729` → `rgba(255,255,255,0.07)`로 재결정. 기존 값은 `color-bg-secondary`(사이드바 배경)와 완전히 동일해 사이드바 내 선택 상태가 시각적으로 드러나지 않았다(기능 1 D3 브라우저 검증 중 사용자 피드백). 7% 흰색 오버레이로 가독 가능한 수준의 강조를 확보. 출처는 `추정` → `결정`으로 승격. 상세 근거는 `architecture/tech-debt.md` T-001 관련 관찰 참조.
 - 0.2 (2026-04-15): `color-focus-ring` 추가. 원본이 focus ring을 커스터마이즈하지 않아 측정 불가 → `결정` 출처로 `rgba(255,255,255,0.6)` 확정(WCAG 3:1 대비 기준). 기하는 2px width / 2px offset / box-shadow 구현으로 인라인 명시.
 - 0.1 (2026-04-15): 초안 작성. 기능 1 디자인 레퍼런스 수집(Liner Scholar 다크 모드)에서 실측한 값을 기준으로 배경·상태 오버레이·텍스트·테두리·간격·radius·모션 카테고리의 첫 토큰을 정의. 브랜드 색상·타이포그래피(heading/body/font-family)·그림자 세부값·space-xl·radius-sm은 (미확인). 후속 기능 작업 중 필요할 때 채운다.

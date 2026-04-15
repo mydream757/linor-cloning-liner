@@ -29,8 +29,9 @@ export async function ProjectList({ currentProjectId }: { currentProjectId: stri
             <Link
               href={`/p/${project.id}/liner`}
               aria-current={isActive ? 'page' : undefined}
+              title={project.name}
               className={`flex h-[30px] items-center gap-2 rounded-[var(--radius-md)] px-2 text-[13px] text-text-primary hover:bg-bg-hover ${
-                isActive ? 'bg-bg-active-subtle' : ''
+                isActive ? 'bg-bg-active-subtle font-medium' : ''
               }`}
             >
               <span className="truncate">{project.name}</span>

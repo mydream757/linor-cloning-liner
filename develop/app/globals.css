@@ -11,7 +11,7 @@
   --color-surface-overlay: rgba(109, 109, 112, 0.16);
 
   --color-bg-hover: rgba(109, 109, 112, 0.12);
-  --color-bg-active-subtle: #272729;
+  --color-bg-active-subtle: rgba(255, 255, 255, 0.07);
   --color-bg-active-strong: rgba(233, 233, 235, 0.24);
 
   --color-text-primary: #ffffff;
