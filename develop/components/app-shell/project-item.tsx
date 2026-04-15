@@ -193,7 +193,18 @@ function DeleteDialog({
   return (
     <dialog
       ref={dialogRef}
-      className="max-w-sm rounded-md border border-border-default bg-bg-secondary p-0 text-text-primary shadow-2xl backdrop:bg-black/60"
+      // 센터링: fixed inset-0 + m-auto + h-fit w-fit 조합은 브라우저 기본
+      // `dialog[open] { margin: auto }`를 명시적으로 재현해 Tailwind preflight와
+      // 무관하게 안정적으로 중앙 정렬된다.
+      // 백드롭 클릭 닫힘: ::backdrop에서 발생한 click은 dialog element로
+      // bubble up되어 target === dialog가 된다. 내부 컨텐츠 클릭은 자식 요소가
+      // target이라 구분 가능.
+      onClick={(e) => {
+        if (e.target === dialogRef.current) {
+          dialogRef.current.close()
+        }
+      }}
+      className="fixed inset-0 m-auto h-fit w-fit max-w-sm rounded-md border border-border-default bg-bg-secondary p-0 text-text-primary shadow-2xl backdrop:bg-black/60"
     >
       <form action={formAction} className="flex flex-col gap-4 p-4">
         <input type="hidden" name="id" value={project.id} />
