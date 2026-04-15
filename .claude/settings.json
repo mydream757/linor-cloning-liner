@@ -1,5 +1,3 @@
 {
-  "env": {
-    "OTEL_RESOURCE_ATTRIBUTES": "project.name=CHANGE_ME"
-  }
+  "env": {}
 }
