@@ -11,7 +11,7 @@ import { redirect } from 'next/navigation'
 
 import { EmptyState } from '@/components/app-shell/empty-state'
 import { getDevUser } from '@/lib/dev-user'
-import { getProject } from '@/lib/queries/project'
+import { getProject, listProjectsByUser } from '@/lib/queries/project'
 
 const VALID_VIEWS = ['liner', 'write', 'scholar'] as const
 type View = (typeof VALID_VIEWS)[number]
@@ -29,14 +29,23 @@ export default async function RootPage() {
   const lastViewRaw = cookieStore.get('last-view')?.value
   const lastView: View = isValidView(lastViewRaw) ? lastViewRaw : 'liner'
 
+  // 1순위: cookie가 유효한 Project를 가리키면 그 뷰로 redirect
   if (lastProjectId) {
     const project = await getProject(lastProjectId)
     if (project && project.userId === devUser.id) {
       redirect(`/p/${project.id}/${lastView}`)
     }
-    // cookie가 가리키는 Project가 없거나 다른 user 소유 → 정리는 D3(Server Action)에서.
-    // 현재는 EmptyState로 fallback.
+    // cookie가 stale(프로젝트 없음/다른 user). cookie 정리는 D3 Server Action에서.
+    // 다음 단계의 fallback이 첫 Project로 보내고, 그곳의 LastLocationTracker가
+    // 쿠키를 자연스럽게 덮어쓴다.
   }
 
+  // 2순위: cookie는 없거나 stale이지만 사용자가 소유한 Project가 있으면 첫 Project로
+  const projects = await listProjectsByUser(devUser.id)
+  if (projects.length > 0) {
+    redirect(`/p/${projects[0].id}/liner`)
+  }
+
+  // 3순위: Project가 하나도 없으면 EmptyState
   return <EmptyState />
 }
