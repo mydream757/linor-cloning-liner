@@ -125,7 +125,10 @@ NextAuth(OAuth 흐름, 세션 관리, 미들웨어 보호)는 실무 Next.js 프
 | 인증 라이브러리 | NextAuth v4.24.13 (이미 설치됨) | Next.js 16 peer dependency 호환 확인됨 (`next: ^16`) |
 | User 모델 | 기존 User 스키마 유지 (email, name, image) | 도메인 모델과 일치. NextAuth의 Account/Session 테이블만 추가 |
 | 데이터 리셋 | 기능 2 완료 후 `prisma migrate reset` | dev@local 데이터는 기능 1 검증 완료로 의미 소멸 |
-| 보호 라우트 방식 | [열린 질문 Q2] Middleware vs `unauthorized()` vs layout 검사 | Developer 단계에서 결정 |
+| 세션 전략 | JWT (stateless) | [ADR-0011](../../architecture/decisions/0011-auth-session-and-route-protection.md) |
+| 보호 라우트 방식 | Middleware(전역 JWT 확인) + layout(소유권 DB 검증) 조합 | [ADR-0011](../../architecture/decisions/0011-auth-session-and-route-protection.md) |
+| callbackUrl | NextAuth 기본 기능 사용 (별도 구현 불필요) | [ADR-0011](../../architecture/decisions/0011-auth-session-and-route-protection.md) |
+| 로그아웃 UI | 사이드바 하단 프로필 → 인라인 expand 메뉴 → 로그아웃 항목 | [design/features/2-auth.md](../../design/features/2-auth.md) Q4 해소 |
 
 ## 6. 의존·후속 영향
 
@@ -148,10 +151,33 @@ NextAuth(OAuth 흐름, 세션 관리, 미들웨어 보호)는 실무 Next.js 프
 
 | # | 질문 | 미룬 이유 | 결정 시점 | 결정 주체 |
 |---|---|---|---|---|
-| Q1 | 세션 전략: JWT vs DB 세션 | NextAuth가 양쪽 모두 지원. 트레이드오프(성능 vs 즉시 무효화)를 구현 시점에 판단 | Developer D1 | Developer |
-| Q2 | 보호 라우트 구현 방식: Middleware vs `unauthorized()` vs layout 검사 | Next.js 16의 `unauthorized()`가 experimental 상태. 안정성 확인 후 결정 | Developer D2 | Developer |
-| Q3 | 로그인 후 "원래 가려던 페이지"로 리다이렉트 (callbackUrl) 구현 방식 | NextAuth 기본 제공 여부와 커스텀 필요 범위를 확인 후 결정 | Developer D2 | Developer |
-| Q4 | 로그아웃 UI 위치: 사이드바 하단 프로필 클릭 vs 드롭다운 vs 별도 설정 | 디자인 의사결정 영역 | 디자인 단계 | Designer |
+| Q1 | ~~세션 전략: JWT vs DB 세션~~ | → **JWT 채택** | [ADR-0011](../../architecture/decisions/0011-auth-session-and-route-protection.md) | Developer |
+| Q2 | ~~보호 라우트 구현 방식~~ | → **Middleware + layout 조합 채택** | [ADR-0011](../../architecture/decisions/0011-auth-session-and-route-protection.md) | Developer |
+| Q3 | ~~callbackUrl 구현 방식~~ | → **NextAuth 기본 기능 사용** | [ADR-0011](../../architecture/decisions/0011-auth-session-and-route-protection.md) | Developer |
+| Q4 | ~~로그아웃 UI 위치~~ | → **사이드바 하단 프로필 인라인 expand** | [design/features/2-auth.md](../../design/features/2-auth.md) | Designer |
+
+## 8. 구현 단계 (D-stages)
+
+이 섹션은 기능 2를 Developer가 어떤 순서로 구현할지에 대한 로드맵이다. 각 단계는 **구현 전 합의 → 구현 → 결정 문서화 → 커밋**의 공통 사이클을 따른다.
+
+| # | 단계 | 목표 | 포함 | 제외 (이후 단계) |
+|---|---|---|---|---|
+| D1 | NextAuth 설정 + Prisma 스키마 | 인증 인프라 바닥 | `@next-auth/prisma-adapter` 설치 (Prisma 7 호환 확인), Account 모델 추가, authOptions 설정 (JWT + Google), route handler (`app/api/auth/[...nextauth]/route.ts`), Google OAuth 환경변수 | UI, 기존 코드 수정 |
+| D2 | 로그인 페이지 UI | 미인증 사용자의 첫 화면 | 디자인 명세 기반 로그인 페이지, Google 버튼, OAuth 에러 처리, 별도 layout (앱 셸 없음) | 사이드바 프로필 |
+| D3 | 보호 라우트 + 기존 코드 마이그레이션 | getDevUser → session 전환 | Middleware 작성 (JWT 토큰 확인), session 헬퍼 생성, Server Action·layout·page의 `getDevUser()` 전면 교체, `lib/dev-user.ts` 삭제 | 사이드바 프로필 UI |
+| D4 | 사이드바 프로필 + 로그아웃 | 로그인 후 사용자 식별·로그아웃 동선 | 사이드바 하단 프로필 버튼, 인라인 expand 메뉴 (이메일 + 로그아웃), 로그아웃 기능 | — |
+| D5 | 종합 검증 + 데이터 리셋 | 기능 2 전체 검증과 완료 표기 | Golden path + 엣지 케이스 수동 검증, `prisma migrate reset`, 기능 1 회귀 테스트, 타입체크/린트, `features.md` 상태 갱신 | — |
+
+### 순서 근거
+
+D1(인프라) → D2(로그인 UI: D1의 OAuth 설정이 있어야 동작) → D3(기존 코드 전환: D1의 session이 있어야 교체 가능) → D4(프로필 UI: D3에서 session이 활성화되어야 표시할 데이터 있음) → D5(전체 검증).
+
+D2와 D3는 독립적으로 보일 수 있으나, D2에서 로그인이 실제로 동작하는 것을 확인한 뒤 D3에서 기존 코드를 전환하는 것이 안전하다. D3에서 한꺼번에 기존 코드를 바꾸면서 로그인이 안 되면 원인 추적이 어려워진다.
+
+### 변경 규율
+
+이 섹션의 **모든 변경은 반드시 Changelog 엔트리와 근거를 수반**한다. 기능 1에서 확립한 원칙을 동일하게 적용한다.
 
 ## Changelog
+- 0.2 (2026-04-16): "5. 도메인·기술 결정 요약"에 ADR-0011 결정(JWT, Middleware+layout, callbackUrl) 및 디자인 Q4 해소 결과 반영. "7. 열린 질문" Q1~Q4 전체 해소 완료 표기. "8. 구현 단계 (D-stages)" 섹션 신설 — D1~D5 로드맵과 순서 근거 정의.
 - 0.1 (2026-04-16): 초안 작성. Google OAuth 단일 프로바이더, 기존 dev-user 교체, 보호 라우트, 로그인/로그아웃 UX 범위 정의.
