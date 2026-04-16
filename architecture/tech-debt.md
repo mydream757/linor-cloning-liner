@@ -49,6 +49,17 @@ last_updated: 2026-04-15
 - **상태**: Open
 - **해소 커밋**: —
 
+### T-002: DB 연결 실패 시 사용자 친화적 에러 처리 없음
+- **기록일**: 2026-04-16
+- **배경**: Prisma 쿼리가 DB 연결 실패(docker 미기동, 네트워크 장애 등)로 throw하면 Next.js 기본 에러 화면(raw stack trace)이 그대로 노출된다. 개발 중 docker를 안 띄운 채 `pnpm dev`를 실행하면 `PrismaClientKnownRequestError`가 그대로 보인다. 프로덕션 시나리오(DB 장애)에서도 동일한 문제가 발생한다.
+- **왜 지금 부채로 남기나**: 기능 1 범위에서는 DB가 정상인 상태가 전제이고, 에러 바운더리 패턴은 앱 전역에 걸치는 인프라 작업이라 기능 1 개별 D-stage에 끼워넣기엔 범위가 맞지 않다. D7(종합 검증) 또는 기능 2(인증) 시점에 전역 에러 처리를 한꺼번에 다루는 편이 일관적이다.
+- **임시 처치**: 없음. 개발자가 `docker compose up -d`를 먼저 실행하는 것을 전제로 한다 (develop/CLAUDE.md "실행 환경 세팅" 참조).
+- **해소 조건**: App Router의 `error.tsx` (error boundary) 또는 root layout의 try/catch로 DB 연결 실패 시 "DB 연결을 확인해주세요" 안내 페이지를 보여주는 구현. 최소 개발 환경 + 프로덕션 양쪽을 커버.
+- **해소 시점**: D7 종합 검증 또는 기능 2 Developer 단계
+- **영향 파일**: `app/error.tsx` (신규), 또는 `lib/prisma.ts`의 연결 검증 로직
+- **상태**: Open
+- **해소 커밋**: —
+
 ---
 
 ## Resolved
