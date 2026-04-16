@@ -38,13 +38,13 @@
 **고려한 대안**: Asset 관리(4)를 Liner 뷰(3) 앞에 놓는 것도 검토했으나, SSE 리스크를 뒤로 미루는 것이 더 위험하다고 판단해 기각. 3단계에서 Reference는 stub으로 두고 4단계에서 실데이터로 연결.
 
 ### 1. 통합 앱 셸 + Project 생성/전환
-- **상태**: 디자인 중
+- **상태**: 완료
 - **관련 엔티티**: Project, User
 - **설명**: 260px 접기 가능 사이드바, 중앙 메인 패널, 뷰 전환(Liner / Write / Scholar). 현재 Project 선택·생성·삭제. 라이너 원본 UI편 레이아웃을 기준.
-- 기획: [plan/features/1-app-shell.md](plan/features/1-app-shell.md)
-- 디자인: [design/features/1-app-shell.md](design/features/1-app-shell.md)
+- 기획: [plan/features/1-app-shell.md](plan/features/1-app-shell.md) (v0.4)
+- 디자인: [design/features/1-app-shell.md](design/features/1-app-shell.md) (v0.2)
 - 디자인 레퍼런스: [design/references/1-app-shell/](design/references/1-app-shell/)
-- 관련 ADR: [0003-view-switching-via-url-segment.md](architecture/decisions/0003-view-switching-via-url-segment.md), [0004-last-location-via-cookie.md](architecture/decisions/0004-last-location-via-cookie.md)
+- 관련 ADR: [0003](architecture/decisions/0003-view-switching-via-url-segment.md), [0004](architecture/decisions/0004-last-location-via-cookie.md), [0005](architecture/decisions/0005-prisma-infrastructure.md), [0006](architecture/decisions/0006-dev-user-seeding-strategy.md), [0007](architecture/decisions/0007-react-cache-for-layout-page-shared-queries.md), [0008](architecture/decisions/0008-server-action-pattern.md), [0009](architecture/decisions/0009-revalidation-strategy.md), [0010](architecture/decisions/0010-sidebar-interactivity-design.md)
 
 ### 2. 인증 (NextAuth) + 데이터 소유권
 - **상태**: 후보
