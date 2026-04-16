@@ -20,6 +20,7 @@ import type { ActionResult } from '@/lib/actions/types'
 
 type Props = {
   project: Project
+  currentView: string
   isActive: boolean
   isEditing: boolean
   onStartEdit: () => void
@@ -32,6 +33,7 @@ export function ProjectItem(props: Props) {
   ) : (
     <DisplayMode
       project={props.project}
+      currentView={props.currentView}
       isActive={props.isActive}
       onStartEdit={props.onStartEdit}
     />
@@ -42,10 +44,12 @@ export function ProjectItem(props: Props) {
 
 function DisplayMode({
   project,
+  currentView,
   isActive,
   onStartEdit,
 }: {
   project: Project
+  currentView: string
   isActive: boolean
   onStartEdit: () => void
 }) {
@@ -58,7 +62,7 @@ function DisplayMode({
       }`}
     >
       <Link
-        href={`/p/${project.id}/liner`}
+        href={`/p/${project.id}/${currentView}`}
         aria-current={isActive ? 'page' : undefined}
         title={project.name}
         onDoubleClick={(e) => {
