@@ -1,10 +1,9 @@
 // 사이드바 (Server Component).
 // - 접힘/펼침 UI는 SidebarShell(Client)에 위임, server-first 원칙 유지.
-// - 이 컴포넌트는 data fetch 의존 컴포넌트들(NewProjectForm, ProjectList)을
-//   children으로 SidebarShell에 전달하는 구조적 역할만 한다.
+// - D6에서 인라인 NewProjectForm → CreateProjectButton 모달 트리거로 승격.
 // - 디자인: design/features/1-app-shell.md
 
-import { NewProjectForm } from '@/components/app-shell/new-project-form'
+import { CreateProjectButton } from '@/components/app-shell/create-project-button'
 import { ProjectList } from '@/components/app-shell/project-list'
 import { SidebarShell } from '@/components/app-shell/sidebar-shell'
 
@@ -13,7 +12,9 @@ export function Sidebar({ currentProjectId }: { currentProjectId: string }) {
     <SidebarShell>
       <div className="flex flex-col gap-3 px-2 py-1">
         <div className="mx-2">
-          <NewProjectForm />
+          <CreateProjectButton className="flex h-8 w-full items-center rounded-md bg-surface-overlay px-2 text-left text-sm text-text-primary hover:opacity-90">
+            + 새 Project
+          </CreateProjectButton>
         </div>
 
         <div className="flex flex-col gap-1">

@@ -1,7 +1,8 @@
 // 빈 상태: Project가 0개이거나 cookie의 last-project가 사라졌을 때 / 에서 표시.
 // 디자인: design/features/1-app-shell.md "2. 빈 상태" 섹션.
+// D6에서 인라인 form → 모달 버튼으로 승격.
 
-import { NewProjectForm } from '@/components/app-shell/new-project-form'
+import { CreateProjectButton } from '@/components/app-shell/create-project-button'
 
 export function EmptyState() {
   return (
@@ -14,9 +15,9 @@ export function EmptyState() {
           프로젝트 안에 대화와 자료를 모을 수 있어요
         </p>
       </div>
-      <div className="w-full max-w-xs">
-        <NewProjectForm autoFocus />
-      </div>
+      <CreateProjectButton className="h-9 rounded-md bg-bg-active-strong px-4 text-sm text-text-primary hover:opacity-90">
+        + 새 Project
+      </CreateProjectButton>
     </main>
   )
 }
