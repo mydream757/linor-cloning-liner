@@ -64,6 +64,7 @@ source: 라이너 원본 서비스 Liner Scholar (scholar.liner.com)
 | 토큰명 | 값 | 출처 | 용도 |
 |--------|---|---|------|
 | color-border-default | `#39393B` | devtools — `neutral-border-opaque-subtle` | 사이드바·카드 구분선 |
+| color-border-normal | `rgba(233,233,235,0.28)` | devtools — `neutral-border-overlay-normal` | 버튼 테두리, 메뉴 구분선 (default보다 약하고 subtle보다 강한 중간 단계) |
 | color-border-subtle | `rgba(233,233,235,0.20)` | devtools — `neutral-border-overlay-subtle` | 반투명 구분선 (메인 헤더 하단) |
 
 ### Focus ring
@@ -133,6 +134,7 @@ source: 라이너 원본 서비스 Liner Scholar (scholar.liner.com)
 
 ## Changelog
 
+- 0.4 (2026-04-16): `color-border-normal` (`rgba(233,233,235,0.28)`) 추가. 기능 2 실측에서 로그인 프로바이더 버튼 border + 프로필 메뉴 구분선에 동일 값이 반복 사용됨을 확인. 기존 `color-border-subtle`(0.20)과 `color-border-default`(불투명 #39393B) 사이의 중간 단계.
 - 0.3 (2026-04-15): `color-bg-active-subtle`을 `#272729` → `rgba(255,255,255,0.07)`로 재결정. 기존 값은 `color-bg-secondary`(사이드바 배경)와 완전히 동일해 사이드바 내 선택 상태가 시각적으로 드러나지 않았다(기능 1 D3 브라우저 검증 중 사용자 피드백). 7% 흰색 오버레이로 가독 가능한 수준의 강조를 확보. 출처는 `추정` → `결정`으로 승격. 상세 근거는 `architecture/tech-debt.md` T-001 관련 관찰 참조.
 - 0.2 (2026-04-15): `color-focus-ring` 추가. 원본이 focus ring을 커스터마이즈하지 않아 측정 불가 → `결정` 출처로 `rgba(255,255,255,0.6)` 확정(WCAG 3:1 대비 기준). 기하는 2px width / 2px offset / box-shadow 구현으로 인라인 명시.
 - 0.1 (2026-04-15): 초안 작성. 기능 1 디자인 레퍼런스 수집(Liner Scholar 다크 모드)에서 실측한 값을 기준으로 배경·상태 오버레이·텍스트·테두리·간격·radius·모션 카테고리의 첫 토큰을 정의. 브랜드 색상·타이포그래피(heading/body/font-family)·그림자 세부값·space-xl·radius-sm은 (미확인). 후속 기능 작업 중 필요할 때 채운다.
