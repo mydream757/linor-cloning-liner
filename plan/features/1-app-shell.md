@@ -1,7 +1,7 @@
 ---
 feature: 통합 앱 셸 + Project 생성/전환
-version: 0.3
-last_updated: 2026-04-15
+version: 0.4
+last_updated: 2026-04-16
 ---
 
 # 기능 1: 통합 앱 셸 + Project 생성/전환
@@ -110,7 +110,7 @@ last_updated: 2026-04-15
 6. Project 이름 변경이 동작한다 (편집 → 저장 → 사이드바 즉시 반영).
 7. Project 삭제가 동작한다. 단순 confirm 후 삭제되며, 사이드바 목록에서 사라진다. 마지막 Project를 삭제하면 빈 상태 화면으로 돌아간다.
 8. 브라우저를 껐다 다시 `/`로 접속하면 마지막에 본 Project와 뷰로 곧장 이동한다. 흰 화면이 보이지 않는다.
-9. cookie의 `last-project`가 더는 존재하지 않는 Project를 가리키면, 빈 상태로 보내고 cookie를 정리한다.
+9. cookie의 `last-project`가 더는 존재하지 않는 Project를 가리키면, 다른 Project가 있으면 그 Project로, 없으면 빈 상태로 보낸다. ~~stale cookie는 명시적으로 정리한다~~ → **자연 복구로 대체**: 목적지의 `LastLocationTracker`가 cookie를 올바른 값으로 덮어쓴다. Next.js 16의 `cookies()`는 Server Component 렌더 중 `.delete()` 호출이 불가하므로 명시적 정리는 불필요한 복잡도를 더한다. 유일한 imperfection(Project 0개 상태에서 stale cookie가 남는 것)은 새 Project 생성 시 자가 치유된다.
 
 ### 기술·품질 요구
 10. URL이 `/p/[projectId]/(liner|write|scholar)` 형태로 드러나며 공유·새로고침·뒤로가기가 정상 동작한다.
@@ -187,6 +187,7 @@ last_updated: 2026-04-15
 
 ## Changelog
 
+- 0.4 (2026-04-16): D7 종합 검증 반영. 성공 기준 9번을 "stale cookie 자연 복구" 방식으로 완화. Next.js 16의 `cookies()` API가 Server Component 렌더 중 `.delete()` 호출을 허용하지 않아 명시적 정리는 불필요한 복잡도. 목적지의 LastLocationTracker가 cookie를 덮어쓰는 자연 복구로 충분하고, Project 0개 상태에서 남는 stale cookie는 새 Project 생성 시 자가 치유됨. 사이드 이펙트 분석 완료(기능 2~6 전반 + 2차 후보 영향 없음).
 - 0.3 (2026-04-15): "8. 구현 단계 (D-stages)" 섹션 신설. 지금까지 Developer 단계의 작업 순서가 대화 안에만 존재해 계획 변경 시 근거 추적이 불가능한 상태였다(의사결정 문서화 원칙 위반). 현재 효력 있는 로드맵 D1~D7을 문서로 영속화한다. 영속화 과정에서 한 건의 실제 변경을 같이 반영했다 — 원래 D4(사이드바 rename+context menu 구조)와 D7(삭제 confirm+rename 키보드 디테일)이 분리돼 있었으나, "사이드바 interactive"라는 단일 사용자 가치를 두 단계로 쪼개면 같은 `<ProjectItem />` 컴포넌트를 두 번 리팩터해야 하는 비효율이 생기므로 D4로 통합하고 원 D8(종합 검증)을 D7로 번호 이동. D4의 구체 설계 결정(Radix DropdownMenu / HTML `<dialog>` / 중앙 `editingId` / pessimistic update)은 ADR-0010에서 별도 다룬다. 이 섹션의 모든 후속 변경은 Changelog 엔트리 + 근거 작성 의무.
 - 0.2 (2026-04-15): 디자인 레퍼런스 수집 결과 반영. 다크 모드 기본화(라이트 제외로 재분류), 상위 뷰 토글의 Scholar pill 스타일 차용 명시, 디자인 레퍼런스 대상으로 Liner Scholar 지정, 목록 "더보기" 패턴과 접힘 상태 UX 명세 추가.
 - 0.1 (2026-04-15): 초안 작성. B안 스코프, URL Segment + cookie 영속, 성공 기준 13개, 열린 질문 6개 정의.
