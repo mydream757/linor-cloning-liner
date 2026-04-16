@@ -75,6 +75,18 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 │   ③ 선행 역할의 산출물 경로 (파일 경로 전달,  │
 │     서브 에이전트가 직접 Read하여 참조)        │
 │ - 독립 작업은 병렬, 의존 작업은 순차 실행      │
+│ - **Designer 위임 시 추가 규율**:            │
+│   design/CLAUDE.md의 "디자인 레퍼런스 수집"   │
+│   워크플로우를 반드시 준수한다:                 │
+│   ① measurements.md 생성                   │
+│     (수집 대상 목록 + 빈 실측 테이블)           │
+│   ② 사용자 스크린샷 촬영                      │
+│   ③ 사용자 실측값 기입                        │
+│   ④ 전역 토큰 확인/추가 (design-tokens.md)   │
+│   ⑤ 디자인 명세 작성 (design/features/)      │
+│   이 순서를 건너뛰거나 축약하지 않는다.          │
+│   UI 표면이 작더라도 프로세스 스킵은            │
+│   사용자가 결정한다.                          │
 └─────────────────────────────────────────┘
      │
      ▼
