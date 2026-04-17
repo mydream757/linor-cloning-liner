@@ -10,7 +10,7 @@ import { cookies } from 'next/headers'
 import { redirect } from 'next/navigation'
 
 import { EmptyState } from '@/components/app-shell/empty-state'
-import { getDevUser } from '@/lib/dev-user'
+import { getRequiredSession } from '@/lib/auth-session'
 import { getProject, listProjectsByUser } from '@/lib/queries/project'
 
 const VALID_VIEWS = ['liner', 'write', 'scholar'] as const
@@ -21,8 +21,7 @@ function isValidView(value: string | undefined): value is View {
 }
 
 export default async function RootPage() {
-  // 기능 2(NextAuth) 통합 전에는 임시 dev user로 소유권 확인.
-  const devUser = await getDevUser()
+  const { user } = await getRequiredSession()
 
   const cookieStore = await cookies()
   const lastProjectId = cookieStore.get('last-project')?.value
@@ -32,7 +31,7 @@ export default async function RootPage() {
   // 1순위: cookie가 유효한 Project를 가리키면 그 뷰로 redirect
   if (lastProjectId) {
     const project = await getProject(lastProjectId)
-    if (project && project.userId === devUser.id) {
+    if (project && project.userId === user.id) {
       redirect(`/p/${project.id}/${lastView}`)
     }
     // cookie가 stale(프로젝트 없음/다른 user). cookie 정리는 D3 Server Action에서.
@@ -41,7 +40,7 @@ export default async function RootPage() {
   }
 
   // 2순위: cookie는 없거나 stale이지만 사용자가 소유한 Project가 있으면 첫 Project로
-  const projects = await listProjectsByUser(devUser.id)
+  const projects = await listProjectsByUser(user.id)
   if (projects.length > 0) {
     redirect(`/p/${projects[0].id}/liner`)
   }

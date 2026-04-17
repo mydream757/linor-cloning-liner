@@ -1,14 +1,14 @@
 'use server'
 
 // Project CRUD Server Actions. ADR-0008(zod + result) + ADR-0009(Phase 1 path-based).
-// 기능 2(NextAuth) 통합 전에는 임시 dev user로 소유권 검증.
+// session 기반 소유권 검증 (ADR-0011).
 
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
 import type { ActionResult } from '@/lib/actions/types'
-import { getDevUser } from '@/lib/dev-user'
+import { getRequiredSession } from '@/lib/auth-session'
 import { prisma } from '@/lib/prisma'
 
 const nameSchema = z
@@ -30,9 +30,9 @@ export async function createProject(
     return { ok: false, error: { fields: z.flattenError(parsed.error).fieldErrors } }
   }
 
-  const devUser = await getDevUser()
+  const { user } = await getRequiredSession()
   const project = await prisma.project.create({
-    data: { userId: devUser.id, name: parsed.data.name },
+    data: { userId: user.id, name: parsed.data.name },
   })
 
   revalidatePath('/', 'layout')
@@ -56,9 +56,9 @@ export async function renameProject(
     return { ok: false, error: { fields: z.flattenError(parsed.error).fieldErrors } }
   }
 
-  const devUser = await getDevUser()
+  const { user } = await getRequiredSession()
   const existing = await prisma.project.findUnique({ where: { id: parsed.data.id } })
-  if (!existing || existing.userId !== devUser.id) {
+  if (!existing || existing.userId !== user.id) {
     return { ok: false, error: { message: '해당 Project를 찾을 수 없습니다' } }
   }
 
@@ -90,9 +90,9 @@ export async function deleteProject(
     return { ok: false, error: { fields: z.flattenError(parsed.error).fieldErrors } }
   }
 
-  const devUser = await getDevUser()
+  const { user } = await getRequiredSession()
   const existing = await prisma.project.findUnique({ where: { id: parsed.data.id } })
-  if (!existing || existing.userId !== devUser.id) {
+  if (!existing || existing.userId !== user.id) {
     return { ok: false, error: { message: '해당 Project를 찾을 수 없습니다' } }
   }
 
@@ -104,7 +104,7 @@ export async function deleteProject(
     // 현재 뷰가 방금 삭제된 Project를 가리키고 있다. 다른 Project로 이동하거나
     // 없으면 /로 보낸다. /는 다시 cookie/목록 기반으로 자연 복구된다.
     const next = await prisma.project.findFirst({
-      where: { userId: devUser.id },
+      where: { userId: user.id },
       orderBy: { createdAt: 'asc' },
     })
     if (next) {

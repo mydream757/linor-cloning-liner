@@ -60,6 +60,17 @@ last_updated: 2026-04-15
 - **상태**: Open
 - **해소 커밋**: —
 
+### T-003: 필수 환경변수 미설정 시 서버 기동 실패 처리 없음
+- **기록일**: 2026-04-17
+- **배경**: `NEXTAUTH_SECRET`이 비어 있으면 NextAuth JWT 서명이 불가능해 모든 로그인이 500 에러를 낸다. 그런데 앱은 정상 기동되고, 로그인 시도 시점에야 `"ikm" must be at least one byte in length` 에러가 터진다. 브라우저에서는 500만 보이고 원인을 알 수 없어 디버깅이 어렵다. `DATABASE_URL` 누락 시에도 유사한 상황(T-002).
+- **왜 지금 부채로 남기나**: 기능 2 D2 시점에서 발견. 환경변수 검증은 앱 전역 인프라 작업이라 D-stage에 끼워넣기보다, 필수 환경변수 목록이 확정된 후(기능 2 완료 시점) 한꺼번에 처리하는 편이 경제적이다.
+- **임시 처치**: `.env.example`에 설정 가이드 명시. 개발자가 수동으로 값을 채우는 것을 전제로 한다.
+- **해소 조건**: 앱 기동 시(`next.config.ts` 또는 root layout 또는 별도 instrumentation) 필수 환경변수(`DATABASE_URL`, `NEXTAUTH_SECRET`)가 비어 있으면 명확한 에러 메시지와 함께 기동을 중단하거나, 사용자 친화적 안내 페이지를 표시한다.
+- **해소 시점**: 기능 2 D5(종합 검증) 또는 기능 3 Developer 단계
+- **영향 파일**: `next.config.ts` 또는 `app/layout.tsx` 또는 `instrumentation.ts` (신규)
+- **상태**: Open
+- **해소 커밋**: —
+
 ---
 
 ## Resolved

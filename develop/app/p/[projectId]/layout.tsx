@@ -8,7 +8,7 @@ import { notFound } from 'next/navigation'
 import { LastLocationTracker } from '@/components/app-shell/last-location-tracker'
 import { Sidebar } from '@/components/app-shell/sidebar'
 import { TopHeader } from '@/components/app-shell/top-header'
-import { getDevUser } from '@/lib/dev-user'
+import { getRequiredSession } from '@/lib/auth-session'
 import { getProject } from '@/lib/queries/project'
 
 export default async function ProjectLayout({
@@ -19,10 +19,10 @@ export default async function ProjectLayout({
   params: Promise<{ projectId: string }>
 }) {
   const { projectId } = await params
-  const devUser = await getDevUser()
+  const { user } = await getRequiredSession()
 
   const project = await getProject(projectId)
-  if (!project || project.userId !== devUser.id) {
+  if (!project || project.userId !== user.id) {
     notFound()
   }
 

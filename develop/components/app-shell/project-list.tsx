@@ -3,7 +3,7 @@
 // - 데이터 fetch는 서버에서, 인터랙티브 렌더는 <ProjectListClient />로 위임 (ADR-0010).
 
 import { ProjectListClient } from '@/components/app-shell/project-list-client'
-import { getDevUser } from '@/lib/dev-user'
+import { getRequiredSession } from '@/lib/auth-session'
 import { listProjectsByUser } from '@/lib/queries/project'
 
 export async function ProjectList({
@@ -11,8 +11,8 @@ export async function ProjectList({
 }: {
   currentProjectId: string
 }) {
-  const devUser = await getDevUser()
-  const projects = await listProjectsByUser(devUser.id)
+  const { user } = await getRequiredSession()
+  const projects = await listProjectsByUser(user.id)
 
   if (projects.length === 0) {
     return (
