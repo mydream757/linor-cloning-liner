@@ -19,6 +19,7 @@
   --color-text-tertiary: rgba(233, 233, 235, 0.32);
 
   --color-border-default: #39393b;
+  --color-border-normal: rgba(233, 233, 235, 0.28);
   --color-border-subtle: rgba(233, 233, 235, 0.2);
 
   --color-focus-ring: rgba(255, 255, 255, 0.6);
