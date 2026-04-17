@@ -47,9 +47,13 @@
 - 관련 ADR: [0003](architecture/decisions/0003-view-switching-via-url-segment.md), [0004](architecture/decisions/0004-last-location-via-cookie.md), [0005](architecture/decisions/0005-prisma-infrastructure.md), [0006](architecture/decisions/0006-dev-user-seeding-strategy.md), [0007](architecture/decisions/0007-react-cache-for-layout-page-shared-queries.md), [0008](architecture/decisions/0008-server-action-pattern.md), [0009](architecture/decisions/0009-revalidation-strategy.md), [0010](architecture/decisions/0010-sidebar-interactivity-design.md)
 
 ### 2. 인증 (NextAuth) + 데이터 소유권
-- **상태**: 후보
+- **상태**: 완료
 - **관련 엔티티**: User
-- **설명**: NextAuth 기반 로그인/세션 관리. Project·Chat·Asset 모두 `user_id`로 소유자 구분. 1인 사용이지만 데이터 구조·NextAuth 심층 기능 학습이 목표.
+- **설명**: NextAuth v4 기반 로그인/세션 관리. Google OAuth + 개발용 Credentials. JWT 세션 전략. Proxy(전역 인증) + layout(소유권 검증) 조합. 사이드바 프로필 + 인라인 로그아웃 메뉴.
+- 기획: [plan/features/2-auth.md](plan/features/2-auth.md) (v0.3)
+- 디자인: [design/features/2-auth.md](design/features/2-auth.md) (v0.1)
+- 디자인 레퍼런스: [design/references/2-auth/](design/references/2-auth/)
+- 관련 ADR: [0011](architecture/decisions/0011-auth-session-and-route-protection.md), [0012](architecture/decisions/0012-dev-credentials-provider.md)
 
 ### 3. Liner 뷰: Chat 기반 AI 대화 (SSE 스트리밍) + 출처·인용 배지
 - **상태**: 후보
