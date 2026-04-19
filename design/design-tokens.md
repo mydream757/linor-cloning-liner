@@ -20,7 +20,7 @@ source: 라이너 원본 서비스 Liner Scholar (scholar.liner.com)
 
 | 토큰명 | 값 | 출처 | 용도 |
 |--------|---|---|------|
-| color-primary | (미확인) | | 주요 액션, CTA (예: "새 프로젝트" 버튼) |
+| color-primary | `rgb(35,102,56)` | devtools — Liner 전송 버튼 활성 `_primary` variant | 주요 액션 (전송 버튼 활성 등) |
 | color-secondary | (미확인) | | 보조 요소 |
 | color-accent | (미확인) | | 강조 |
 
@@ -39,7 +39,8 @@ source: 라이너 원본 서비스 Liner Scholar (scholar.liner.com)
 |--------|---|---|------|
 | color-bg-primary | `#1E1E1F` | devtools — `neutral-container-lowest` | 메인 패널 배경 (가장 어두운 베이스) |
 | color-bg-secondary | `#272729` | devtools — `neutral-container-low` | 사이드바 배경 (한 단계 밝은 표면) |
-| color-surface-overlay | `rgba(109,109,112,0.16)` | devtools — `neutral-fill-overlay-mid` | 반투명 오버레이 컨테이너 (pill 토글 등) |
+| color-surface-overlay | `rgba(109,109,112,0.16)` | devtools — `neutral-fill-overlay-mid` | 반투명 오버레이 컨테이너 (pill 토글, 사용자 메시지 버블 등) |
+| color-bg-badge | `rgb(49,49,51)` | devtools — `neutral-container-high` | 출처 배지 배경 |
 
 ### 상태 오버레이
 
@@ -83,10 +84,10 @@ source: 라이너 원본 서비스 Liner Scholar (scholar.liner.com)
 
 | 토큰명 | 크기 | 두께 | 행간 | 출처 | 용도 |
 |--------|------|------|------|---|------|
-| text-heading-1 | (미확인) | | | | 페이지 제목 |
-| text-heading-2 | (미확인) | | | | 섹션 제목 |
-| text-heading-3 | (미확인) | | | | 소제목 |
-| text-body | (미확인) | | | | 본문 |
+| text-heading-1 | 32px | 500 | (미확인) | devtools — Liner 빈 상태 CTA | 페이지 제목 |
+| text-heading-2 | 22px | 600 | (미확인) | devtools — AI 응답 H3 제목 | 섹션 제목 |
+| text-heading-3 | 17px | 600 | (미확인) | devtools — 출처 패널 헤더 | 소제목 |
+| text-body | 16px | 350 | 25.6px | devtools — 메시지 본문 | 본문 |
 | text-caption | 13px | 400 | (미확인) | devtools — Project 항목 | 사이드바 리스트 항목·보조 텍스트 |
 
 ### 폰트 패밀리
@@ -112,9 +113,11 @@ source: 라이너 원본 서비스 Liner Scholar (scholar.liner.com)
 
 | 토큰명 | 값 | 출처 | 용도 |
 |--------|---|---|------|
-| radius-sm | (미확인) | | 작은 요소 (칩, 배지) |
-| radius-md | 8px | devtools — pill 개별 버튼 (`rounded-[8px]`) | 버튼, 입력 필드 |
+| radius-sm | 6px | devtools — Chat 목록 항목, 출처 카드 | 작은 요소 (리스트 항목, 카드) |
+| radius-md | 8px | devtools — pill 개별 버튼 (`rounded-[8px]`), 출처 배지 | 버튼, 입력 필드, 배지 |
 | radius-lg | 10px | devtools — pill 컨테이너 (`rounded-m`) | 카드, 모달 |
+| radius-xl | 20px | devtools — 사용자 메시지 버블 | 메시지 버블 |
+| radius-full | 28px+ | devtools — 입력카드(28px), 원형 버튼(200px) | 둥근 카드, 원형 요소 |
 
 ## 그림자
 
@@ -134,6 +137,7 @@ source: 라이너 원본 서비스 Liner Scholar (scholar.liner.com)
 
 ## Changelog
 
+- 0.5 (2026-04-17): 기능 3 실측 반영. `color-primary` rgb(35,102,56) 확정 (전송 버튼 활성). `color-bg-badge` rgb(49,49,51) 추가 (출처 배지). 타이포그래피 `text-heading-1`(32px/500), `text-heading-2`(22px/600), `text-heading-3`(17px/600), `text-body`(16px/350/25.6px) 실측 확정. `radius-sm`(6px) 확정, `radius-xl`(20px), `radius-full`(28px+) 추가.
 - 0.4 (2026-04-16): `color-border-normal` (`rgba(233,233,235,0.28)`) 추가. 기능 2 실측에서 로그인 프로바이더 버튼 border + 프로필 메뉴 구분선에 동일 값이 반복 사용됨을 확인. 기존 `color-border-subtle`(0.20)과 `color-border-default`(불투명 #39393B) 사이의 중간 단계.
 - 0.3 (2026-04-15): `color-bg-active-subtle`을 `#272729` → `rgba(255,255,255,0.07)`로 재결정. 기존 값은 `color-bg-secondary`(사이드바 배경)와 완전히 동일해 사이드바 내 선택 상태가 시각적으로 드러나지 않았다(기능 1 D3 브라우저 검증 중 사용자 피드백). 7% 흰색 오버레이로 가독 가능한 수준의 강조를 확보. 출처는 `추정` → `결정`으로 승격. 상세 근거는 `architecture/tech-debt.md` T-001 관련 관찰 참조.
 - 0.2 (2026-04-15): `color-focus-ring` 추가. 원본이 focus ring을 커스터마이즈하지 않아 측정 불가 → `결정` 출처로 `rgba(255,255,255,0.6)` 확정(WCAG 3:1 대비 기준). 기하는 2px width / 2px offset / box-shadow 구현으로 인라인 명시.
