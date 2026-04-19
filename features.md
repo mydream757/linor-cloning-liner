@@ -56,9 +56,12 @@
 - 관련 ADR: [0011](architecture/decisions/0011-auth-session-and-route-protection.md), [0012](architecture/decisions/0012-dev-credentials-provider.md)
 
 ### 3. Liner 뷰: Chat 기반 AI 대화 (SSE 스트리밍) + 출처·인용 배지
-- **상태**: 후보
+- **상태**: 구현 중 (D1 완료, D2 진행 중)
 - **관련 엔티티**: Chat, Message, Asset(Reference)
-- **설명**: 현재 Chat에 메시지 전송, Anthropic SDK로 SSE 스트리밍 응답 처리. 선택된 Reference Asset들을 컨텍스트로 주입. 응답 본문 내 `[n]` 출처 배지를 클릭하면 원문/근거 표시. **학습 핵심: SSE 저수준 직접 구현**.
+- **설명**: 현재 Chat에 메시지 전송, LLM SDK(Anthropic/Gemini 듀얼)로 SSE 스트리밍 응답 처리. 선택된 Reference Asset들을 컨텍스트로 주입. 응답 본문 내 `[n]` 출처 배지를 클릭하면 원문/근거 표시. **학습 핵심: SSE 저수준 직접 구현**.
+- 기획: [plan/features/3-liner.md](plan/features/3-liner.md) (v0.3)
+- 디자인: [design/features/3-liner.md](design/features/3-liner.md) (v0.1)
+- 관련 ADR: [0013](architecture/decisions/0013-llm-provider-abstraction.md)
 
 ### 4. Asset 관리 (Reference + Document)
 - **상태**: 후보
