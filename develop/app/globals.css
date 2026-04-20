@@ -2,12 +2,15 @@
 
 /*
  * 전역 디자인 토큰 (다크 단일 테마).
- * 원본: design/design-tokens.md v0.2
- * 값은 라이너 Scholar 실측(ADR: design/references/1-app-shell/measurements.md).
+ * 원본: design/design-tokens.md v0.5 (기능 3 실측 반영)
+ * 값은 라이너 Scholar/Liner 실측.
  */
 @theme {
+  --color-primary: rgb(35, 102, 56);
+
   --color-bg-primary: #1e1e1f;
   --color-bg-secondary: #272729;
+  --color-bg-badge: rgb(49, 49, 51);
   --color-surface-overlay: rgba(109, 109, 112, 0.16);
 
   --color-bg-hover: rgba(109, 109, 112, 0.12);
@@ -24,8 +27,22 @@
 
   --color-focus-ring: rgba(255, 255, 255, 0.6);
 
+  --radius-sm: 6px;
   --radius-md: 8px;
   --radius-lg: 10px;
+  --radius-xl: 20px;
+
+  --text-heading-1: 32px;
+  --text-heading-1--font-weight: 500;
+  --text-heading-2: 22px;
+  --text-heading-2--font-weight: 600;
+  --text-heading-3: 17px;
+  --text-heading-3--font-weight: 600;
+  --text-body: 16px;
+  --text-body--line-height: 25.6px;
+  --text-body--font-weight: 350;
+  --text-caption: 13px;
+  --text-caption--font-weight: 400;
 }
 
 @theme inline {
@@ -51,3 +68,4 @@ body {
   outline: none;
   box-shadow: 0 0 0 2px var(--color-bg-primary), 0 0 0 4px var(--color-focus-ring);
 }
+
