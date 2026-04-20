@@ -6,6 +6,7 @@ import { notFound } from 'next/navigation'
 import { ChatView } from '@/components/chat/chat-view'
 import { getRequiredSession } from '@/lib/auth-session'
 import type { ClientMessage } from '@/lib/chat/message-types'
+import type { Citation } from '@/lib/chat/sse-types'
 import { getChatWithMessages } from '@/lib/queries/chat'
 
 export default async function ChatPage({
@@ -27,6 +28,7 @@ export default async function ChatPage({
       id: m.id,
       role: m.role as 'user' | 'assistant',
       content: m.content,
+      citations: m.citations ? (m.citations as unknown as Citation[]) : undefined,
     }))
 
   return <ChatView chatId={chatId} initialMessages={initialMessages} />

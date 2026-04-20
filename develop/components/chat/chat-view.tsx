@@ -10,9 +10,11 @@ import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { ClientMessage } from '@/lib/chat/message-types'
+import type { Citation } from '@/lib/chat/sse-types'
 import { useChatStream } from '@/lib/chat/use-chat-stream'
 
 import { ChatComposer } from './chat-composer'
+import { CitationPanel } from './citation-panel'
 import { ErrorMessage } from './error-message'
 import { MessageList } from './message-list'
 
@@ -25,6 +27,7 @@ export function ChatView({ chatId, initialMessages }: Props) {
   const router = useRouter()
   const [messages, setMessages] = useState<ClientMessage[]>(initialMessages)
   const [lastUserContent, setLastUserContent] = useState<string | null>(null)
+  const [activeCitations, setActiveCitations] = useState<Citation[] | null>(null)
   const pendingFiredRef = useRef(false)
 
   const { streamingMessage, isStreaming, error, sendMessage, abort } = useChatStream({
@@ -32,7 +35,12 @@ export function ChatView({ chatId, initialMessages }: Props) {
     onStreamEnd: (finalMessage) => {
       setMessages((prev) => [
         ...prev,
-        { id: finalMessage.id, role: 'assistant', content: finalMessage.content },
+        {
+          id: finalMessage.id,
+          role: 'assistant',
+          content: finalMessage.content,
+          citations: finalMessage.citations,
+        },
       ])
       // 사이드바(제목 자동 갱신, 최근 기록 순서) 서버 컴포넌트 다시 렌더.
       router.refresh()
@@ -69,28 +77,37 @@ export function ChatView({ chatId, initialMessages }: Props) {
   }, [lastUserContent, sendMessage])
 
   return (
-    <div className="flex h-full flex-col">
-      <MessageList
-        messages={messages}
-        streamingContent={streamingMessage?.content ?? null}
-      />
-      <div className="mx-auto mb-5 flex w-full max-w-180 shrink-0 flex-col px-4 pt-3 md:px-20">
-        {error && (
-          <div className="mb-3 rounded-md border border-border-subtle bg-bg-primary p-3">
-            <ErrorMessage
-              error={error.message}
-              retryable={error.retryable}
-              onRetry={handleRetry}
-            />
-          </div>
-        )}
-        <ChatComposer
-          onSend={handleSend}
-          onStop={abort}
-          isStreaming={isStreaming}
-          autoFocus
+    <div className="flex h-full">
+      <div className="flex min-w-0 flex-1 flex-col">
+        <MessageList
+          messages={messages}
+          streamingContent={streamingMessage?.content ?? null}
+          onOpenCitations={(citations) => setActiveCitations(citations)}
         />
+        <div className="mx-auto mb-5 flex w-full max-w-180 shrink-0 flex-col px-4 pt-3 md:px-20">
+          {error && (
+            <div className="mb-3 rounded-md border border-border-subtle bg-bg-primary p-3">
+              <ErrorMessage
+                error={error.message}
+                retryable={error.retryable}
+                onRetry={handleRetry}
+              />
+            </div>
+          )}
+          <ChatComposer
+            onSend={handleSend}
+            onStop={abort}
+            isStreaming={isStreaming}
+            autoFocus
+          />
+        </div>
       </div>
+      {activeCitations ? (
+        <CitationPanel
+          citations={activeCitations}
+          onClose={() => setActiveCitations(null)}
+        />
+      ) : null}
     </div>
   )
 }

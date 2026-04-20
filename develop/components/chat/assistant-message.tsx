@@ -1,13 +1,27 @@
 // 어시스턴트 메시지 — 배경 없이 본문 + 마크다운 렌더.
 // 디자인: design/features/3-liner.md §2-2 어시스턴트 메시지.
-// 출처 배지 [n] 파싱·인터랙션은 D5에서 추가.
+// [n] 출처 배지는 rehypeCitationBadges 플러그인이 span[data-citation]으로 변환.
+// 완료된 메시지에만 하단 액션바("N개의 출처" 버튼) 노출 — 스트리밍 중엔 citations 없음.
 
 import ReactMarkdown from 'react-markdown'
 
-export function AssistantMessage({ content }: { content: string }) {
+import { rehypeCitationBadges } from '@/lib/chat/rehype-citation-badges'
+import type { Citation } from '@/lib/chat/sse-types'
+
+import { CitationBadge } from './citation-badge'
+import { ResponseActions } from './response-actions'
+
+interface Props {
+  content: string
+  citations?: Citation[]
+  onOpenCitations?: (citations: Citation[]) => void
+}
+
+export function AssistantMessage({ content, citations, onOpenCitations }: Props) {
   return (
     <div className="text-text-primary">
       <ReactMarkdown
+        rehypePlugins={[rehypeCitationBadges]}
         components={{
           p: ({ children }) => <p className="text-body mb-3 last:mb-0">{children}</p>,
           h1: ({ children }) => (
@@ -43,10 +57,23 @@ export function AssistantMessage({ content }: { content: string }) {
           ),
           strong: ({ children }) => <strong className="font-semibold">{children}</strong>,
           em: ({ children }) => <em className="italic">{children}</em>,
+          span: ({ children, ...props }) => {
+            const citation = (props as Record<string, unknown>)['data-citation']
+            if (typeof citation === 'string') {
+              return <CitationBadge n={Number(citation)} />
+            }
+            return <span {...props}>{children}</span>
+          },
         }}
       >
         {content}
       </ReactMarkdown>
+      {citations && citations.length > 0 && onOpenCitations ? (
+        <ResponseActions
+          count={citations.length}
+          onOpenCitations={() => onOpenCitations(citations)}
+        />
+      ) : null}
     </div>
   )
 }

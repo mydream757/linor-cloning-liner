@@ -6,6 +6,7 @@
 import { useEffect, useRef, useState } from 'react'
 
 import type { ClientMessage } from '@/lib/chat/message-types'
+import type { Citation } from '@/lib/chat/sse-types'
 
 import { AssistantMessage } from './assistant-message'
 import { UserBubble } from './user-bubble'
@@ -13,11 +14,12 @@ import { UserBubble } from './user-bubble'
 interface Props {
   messages: ClientMessage[]
   streamingContent?: string | null
+  onOpenCitations?: (citations: Citation[]) => void
 }
 
 const AUTO_SCROLL_THRESHOLD_PX = 80
 
-export function MessageList({ messages, streamingContent }: Props) {
+export function MessageList({ messages, streamingContent, onOpenCitations }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [autoScroll, setAutoScroll] = useState(true)
 
@@ -55,7 +57,11 @@ export function MessageList({ messages, streamingContent }: Props) {
               {m.role === 'user' ? (
                 <UserBubble content={m.content} />
               ) : (
-                <AssistantMessage content={m.content} />
+                <AssistantMessage
+                  content={m.content}
+                  citations={m.citations}
+                  onOpenCitations={onOpenCitations}
+                />
               )}
             </div>
           )
