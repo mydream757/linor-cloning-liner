@@ -69,3 +69,13 @@ body {
   box-shadow: 0 0 0 2px var(--color-bg-primary), 0 0 0 4px var(--color-focus-ring);
 }
 
+/* Chat 입력 textarea는 전역 링 미적용 — 카드 border + 커서만으로 포커스 표시.
+ * 카드 안에 링이 겹치면 시각 노이즈라 입력 영역에만 예외 적용.
+ * !important로 layered utilities·preflight 우선순위 모두 덮어쓴다. */
+textarea.chat-textarea,
+textarea.chat-textarea:focus,
+textarea.chat-textarea:focus-visible {
+  box-shadow: none !important;
+  outline: none !important;
+}
+

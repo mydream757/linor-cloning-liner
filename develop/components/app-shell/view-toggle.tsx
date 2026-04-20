@@ -17,8 +17,11 @@ const VIEWS = [
 type ViewKey = (typeof VIEWS)[number]['key']
 
 function getActiveView(pathname: string): ViewKey | null {
+  // /p/[projectId]/[view] 또는 /p/[projectId]/[view]/... — 3번째 세그먼트가 view.
+  const segments = pathname.split('/').filter(Boolean)
+  const viewSegment = segments[2]
   for (const { key } of VIEWS) {
-    if (pathname.endsWith(`/${key}`)) return key
+    if (viewSegment === key) return key
   }
   return null
 }
@@ -39,9 +42,14 @@ export function ViewToggle({ currentProjectId }: { currentProjectId: string }) {
             key={key}
             href={`/p/${currentProjectId}/${key}`}
             aria-current={isActive ? 'page' : undefined}
+            aria-disabled={isActive || undefined}
+            tabIndex={isActive ? -1 : undefined}
+            onClick={(e) => {
+              if (isActive) e.preventDefault()
+            }}
             className={`flex h-7 items-center rounded-md px-3 text-[13px] transition-colors ${
               isActive
-                ? 'bg-bg-active-strong text-text-primary shadow'
+                ? 'bg-bg-active-strong text-text-primary shadow cursor-default'
                 : 'text-text-tertiary hover:text-text-secondary'
             }`}
           >
