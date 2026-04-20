@@ -63,10 +63,10 @@
 - 디자인: [design/features/3-liner.md](design/features/3-liner.md) (v0.1)
 - 관련 ADR: [0013](architecture/decisions/0013-llm-provider-abstraction.md)
 
-### 4. Asset 관리 (Reference + Document)
+### 4. Asset 관리 (Reference + Document) + 미할당 Chat
 - **상태**: 후보
-- **관련 엔티티**: Asset
-- **설명**: Reference 저장(URL, 텍스트 스니펫), Document 생성·목록·삭제. Project 할당·미할당 상태 모두 지원. **파일 업로드/파싱(PDF·DOCX·HWP)은 1차 제외** — 복잡도 대비 학습 가치 낮음.
+- **관련 엔티티**: Asset, Chat
+- **설명**: Reference 저장(URL, 텍스트 스니펫), Document 생성·목록·삭제. Project 할당·미할당 상태 모두 지원 (Asset + Chat 공통). **파일 업로드/파싱(PDF·DOCX·HWP)은 1차 제외** — 복잡도 대비 학습 가치 낮음. 미할당 지원을 위해 top-level 라우트(`/liner`, `/liner/c/[chatId]` 등)와 projectId-less 레이아웃을 함께 도입 — 기능 3 D4에서 연기된 "프로젝트 종속 없는 대화" 요구도 여기에서 해소.
 
 ### 5. Write 뷰: Document Asset 편집 (TipTap) + AI 수정 제안 Before/After 비교
 - **상태**: 후보
@@ -82,7 +82,6 @@
 
 1차 MVP 완성 후 검토할 기능들. 상황에 따라 재평가.
 
-- 최근 기록 / 서비스 간 탐색 (사이드바의 최근 Chat·Asset 목록)
 - 파일 업로드/파싱 (PDF / DOCX / HWP)
 - 인용 찾기 (Write 본문 선택 → Liner 검색으로 근거 탐색)
 - Chat을 Project로 할당할 때 "이 Chat이 만든 Asset도 함께 이동" 옵션 UI
