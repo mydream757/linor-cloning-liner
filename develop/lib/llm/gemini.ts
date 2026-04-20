@@ -18,7 +18,7 @@ export function createGeminiProvider(): LLMProvider {
       systemPrompt: string,
       options?: LLMStreamOptions,
     ): AsyncIterable<LLMStreamChunk> {
-      const model = process.env.GEMINI_MODEL ?? 'gemini-2.0-flash'
+      const model = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash-lite'
 
       // Gemini의 contents 포맷으로 변환 (role: user/model)
       const contents = messages.map((m) => ({
