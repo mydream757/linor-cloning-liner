@@ -11,6 +11,15 @@ export const listChatsByProject = cache(async (projectId: string) => {
   })
 })
 
+// 사이드바 "최근 기록" 섹션용 — user의 cross-project 최신 Chat N개.
+export const listRecentChatsByUser = cache(async (userId: string, limit = 10) => {
+  return prisma.chat.findMany({
+    where: { userId },
+    orderBy: { updatedAt: 'desc' },
+    take: limit,
+  })
+})
+
 export const getLatestChatIdByProject = cache(async (projectId: string) => {
   const chat = await prisma.chat.findFirst({
     where: { projectId },

@@ -6,6 +6,7 @@
 // - 스트리밍 종료 시 어시스턴트 메시지를 local state에 append
 // - 빈 상태에서 넘어온 직후 sessionStorage의 pending 메시지가 있으면 한 번 자동 발사
 
+import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
 import type { ClientMessage } from '@/lib/chat/message-types'
@@ -21,6 +22,7 @@ interface Props {
 }
 
 export function ChatView({ chatId, initialMessages }: Props) {
+  const router = useRouter()
   const [messages, setMessages] = useState<ClientMessage[]>(initialMessages)
   const [lastUserContent, setLastUserContent] = useState<string | null>(null)
   const pendingFiredRef = useRef(false)
@@ -32,6 +34,8 @@ export function ChatView({ chatId, initialMessages }: Props) {
         ...prev,
         { id: finalMessage.id, role: 'assistant', content: finalMessage.content },
       ])
+      // 사이드바(제목 자동 갱신, 최근 기록 순서) 서버 컴포넌트 다시 렌더.
+      router.refresh()
     },
   })
 

@@ -20,3 +20,14 @@ export const listProjectsByUser = cache(async (userId: string) => {
     orderBy: { createdAt: 'asc' },
   })
 })
+
+// 사이드바 Project 트리용 — 각 Project와 그 Chat을 한 번에 로드. N+1 회피.
+export const listProjectsWithChatsByUser = cache(async (userId: string) => {
+  return prisma.project.findMany({
+    where: { userId },
+    orderBy: { createdAt: 'asc' },
+    include: {
+      chats: { orderBy: { updatedAt: 'desc' } },
+    },
+  })
+})

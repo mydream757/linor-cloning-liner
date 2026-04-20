@@ -1,42 +1,54 @@
 'use client'
 
 // 사이드바의 단일 Project 항목. ADR-0010 설계 결정을 따른다.
-// - Radix DropdownMenu (⋯)
-// - HTML <dialog>로 삭제 confirm
-// - 부모 <ProjectListClient />의 중앙 editingId로 rename 편집 모드 전환
-// - Pessimistic update (스피너 + 대기, 실패 시 인라인 에러)
-//
-// 두 가지 렌더 분기:
-//   isEditing=true  → <RenameMode /> (form + input)
-//   isEditing=false → <DisplayMode /> (Link + 메뉴 + 삭제 다이얼로그)
+// - Radix DropdownMenu (⋯) / HTML <dialog>로 삭제 confirm
+// - 부모의 중앙 editingId로 rename 편집 모드 전환
+// - D4(기능 3): caret 클릭으로 Chat 트리 펼침/접힘. 디자인 §2-6 트리 상태 규칙.
 
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
-import type { Project } from '@prisma/client'
+import type { Chat, Project } from '@prisma/client'
 import Link from 'next/link'
-import { useActionState, useEffect, useRef } from 'react'
+import { useRouter } from 'next/navigation'
+import { useActionState, useEffect, useRef, useTransition } from 'react'
 
+import { ChatListClient } from '@/components/chat/chat-list-client'
+import { createChat } from '@/lib/actions/chat'
 import { deleteProject, renameProject } from '@/lib/actions/project'
 import type { ActionResult } from '@/lib/actions/types'
 
 type Props = {
   project: Project
+  chats: Chat[]
   currentView: string
   isActive: boolean
   isEditing: boolean
+  isExpanded: boolean
   onStartEdit: () => void
   onStopEdit: () => void
+  onToggleExpand: () => void
 }
 
 export function ProjectItem(props: Props) {
-  return props.isEditing ? (
-    <RenameMode project={props.project} onDone={props.onStopEdit} />
-  ) : (
-    <DisplayMode
-      project={props.project}
-      currentView={props.currentView}
-      isActive={props.isActive}
-      onStartEdit={props.onStartEdit}
-    />
+  return (
+    <div>
+      {props.isEditing ? (
+        <RenameMode project={props.project} onDone={props.onStopEdit} />
+      ) : (
+        <DisplayMode
+          project={props.project}
+          currentView={props.currentView}
+          isActive={props.isActive}
+          isExpanded={props.isExpanded}
+          onStartEdit={props.onStartEdit}
+          onToggleExpand={props.onToggleExpand}
+        />
+      )}
+      {props.isExpanded ? (
+        <div className="mt-1 max-h-60 overflow-y-auto pl-4">
+          <ChatListClient chats={props.chats} />
+        </div>
+      ) : null}
+    </div>
   )
 }
 
@@ -46,12 +58,16 @@ function DisplayMode({
   project,
   currentView,
   isActive,
+  isExpanded,
   onStartEdit,
+  onToggleExpand,
 }: {
   project: Project
   currentView: string
   isActive: boolean
+  isExpanded: boolean
   onStartEdit: () => void
+  onToggleExpand: () => void
 }) {
   const dialogRef = useRef<HTMLDialogElement | null>(null)
 
@@ -61,6 +77,15 @@ function DisplayMode({
         isActive ? 'bg-bg-active-subtle font-medium' : ''
       }`}
     >
+      <button
+        type="button"
+        onClick={onToggleExpand}
+        aria-label={isExpanded ? `${project.name} 접기` : `${project.name} 펼치기`}
+        aria-expanded={isExpanded}
+        className="flex h-6 w-5 shrink-0 items-center justify-center text-text-secondary hover:text-text-primary"
+      >
+        {isExpanded ? '▾' : '▸'}
+      </button>
       <Link
         href={`/p/${project.id}/${currentView}`}
         aria-current={isActive ? 'page' : undefined}
@@ -69,10 +94,12 @@ function DisplayMode({
           e.preventDefault()
           onStartEdit()
         }}
-        className="flex min-w-0 flex-1 items-center px-2 truncate"
+        className="flex min-w-0 flex-1 items-center px-1 truncate"
       >
         {project.name}
       </Link>
+
+      <NewChatInProjectButton project={project} />
 
       <DropdownMenu.Root>
         <DropdownMenu.Trigger asChild>
@@ -120,6 +147,36 @@ function DisplayMode({
         dialogRef={dialogRef}
       />
     </div>
+  )
+}
+
+// ---------- New chat button (in-project) ----------
+
+// Project 항목 hover 시 노출되는 "+" 버튼. 해당 Project에 blank Chat("새 대화") 생성 후
+// 새 Chat 라우트로 이동. 제목은 첫 user 메시지 전송 시 서버에서 자동 갱신 (route.ts).
+function NewChatInProjectButton({ project }: { project: Project }) {
+  const router = useRouter()
+  const [isPending, startTransition] = useTransition()
+
+  function handleClick() {
+    startTransition(async () => {
+      const result = await createChat({ projectId: project.id, title: '새 대화' })
+      if (result.ok) {
+        router.push(`/p/${project.id}/liner/c/${result.data.id}`)
+      }
+    })
+  }
+
+  return (
+    <button
+      type="button"
+      onClick={handleClick}
+      disabled={isPending}
+      aria-label={`${project.name}에 새 대화 추가`}
+      className="flex h-6 w-6 shrink-0 items-center justify-center rounded text-text-secondary opacity-0 hover:bg-bg-hover focus-visible:opacity-100 group-hover:opacity-100 disabled:opacity-30"
+    >
+      +
+    </button>
   )
 }
 

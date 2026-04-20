@@ -4,6 +4,7 @@
 // session 기반 소유권 검증 (ADR-0011).
 
 import { revalidatePath } from 'next/cache'
+import { redirect } from 'next/navigation'
 import { z } from 'zod'
 
 import type { ActionResult } from '@/lib/actions/types'
@@ -86,8 +87,11 @@ export async function renameChat(
 }
 
 // Chat 삭제. Messages cascade, 연관 Asset의 origin_chat_id는 null 처리 (기능 4에서 Asset 모델 추가 시).
+// deleteCurrent flag가 있으면 현재 보고 있는 Chat을 삭제 중이라는 의미 — 같은 Project의
+// 다른 Chat으로 이동하거나 없으면 /liner(빈 상태)로 redirect한다.
 const deleteChatSchema = z.object({
   id: z.string().min(1),
+  deleteCurrent: z.string().optional(),
 })
 
 export async function deleteChat(
@@ -96,6 +100,7 @@ export async function deleteChat(
 ): Promise<ActionResult<{ id: string }>> {
   const parsed = deleteChatSchema.safeParse({
     id: formData.get('id'),
+    deleteCurrent: formData.get('deleteCurrent') ?? undefined,
   })
   if (!parsed.success) {
     return { ok: false, error: { fields: z.flattenError(parsed.error).fieldErrors } }
@@ -113,5 +118,17 @@ export async function deleteChat(
   if (existing.projectId) {
     revalidatePath(`/p/${existing.projectId}`, 'layout')
   }
+
+  if (parsed.data.deleteCurrent && existing.projectId) {
+    const next = await prisma.chat.findFirst({
+      where: { projectId: existing.projectId },
+      orderBy: { updatedAt: 'desc' },
+    })
+    if (next) {
+      redirect(`/p/${existing.projectId}/liner/c/${next.id}`)
+    }
+    redirect(`/p/${existing.projectId}/liner`)
+  }
+
   return { ok: true, data: { id: parsed.data.id } }
 }

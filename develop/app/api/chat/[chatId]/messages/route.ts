@@ -2,6 +2,8 @@
 // LLM 프로바이더(Anthropic/Gemini) → Web Streams API → SSE 이벤트로 변환.
 // 고수준 추상화(AI SDK) 없이 저수준 직접 구현 (학습 핵심).
 
+import { revalidatePath } from 'next/cache'
+
 import { getServerSession } from '@/lib/auth-session'
 import type { Citation, SSEEvent } from '@/lib/chat/sse-types'
 import type { LLMMessage } from '@/lib/llm/types'
@@ -37,9 +39,27 @@ export async function POST(
   }
 
   // 4. 사용자 메시지 저장 + 어시스턴트 메시지 레코드 (빈 content, 스트림 완료/중단 시 갱신).
+  //    Project 항목의 "+" 버튼으로 생성된 blank Chat("새 대화")은 첫 user 메시지 시 제목 자동 갱신.
+  const isFirstMessage = chat.messages.length === 0
+  const isDefaultTitle = chat.title === '새 대화'
+
   await prisma.message.create({
     data: { chatId, role: 'user', content },
   })
+
+  if (isFirstMessage && isDefaultTitle) {
+    await prisma.chat.update({
+      where: { id: chatId },
+      data: { title: content.slice(0, 30).trim() || '새 대화' },
+    })
+  }
+
+  // 사이드바(Project 트리 + 최근 기록)는 project-scoped layout 캐시를 공유.
+  // 제목 자동 갱신이 있었거나, updatedAt이 바뀌어 "최근 기록" 순서가 변해야 하므로 매번 revalidate.
+  if (chat.projectId) {
+    revalidatePath(`/p/${chat.projectId}`, 'layout')
+  }
+
   const assistantMessage = await prisma.message.create({
     data: { chatId, role: 'assistant', content: '' },
   })

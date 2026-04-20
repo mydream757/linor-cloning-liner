@@ -8,6 +8,7 @@ import { CreateProjectButton } from '@/components/app-shell/create-project-butto
 import { ProfileSection } from '@/components/app-shell/profile-section'
 import { ProjectList } from '@/components/app-shell/project-list'
 import { SidebarShell } from '@/components/app-shell/sidebar-shell'
+import { RecentsSection } from '@/components/chat/recents-section'
 import { getRequiredSession } from '@/lib/auth-session'
 
 export async function Sidebar({ currentProjectId }: { currentProjectId: string }) {
@@ -28,6 +29,8 @@ export async function Sidebar({ currentProjectId }: { currentProjectId: string }
           </div>
           <ProjectList currentProjectId={currentProjectId} />
         </div>
+
+        <RecentsSection />
       </div>
 
       <ProfileSection user={{ name: user.name, email: user.email, image: user.image }} />
