@@ -2,6 +2,7 @@
 // LLM 프로바이더(Anthropic/Gemini) → Web Streams API → SSE 이벤트로 변환.
 // 고수준 추상화(AI SDK) 없이 저수준 직접 구현 (학습 핵심).
 
+import type { Prisma } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 
 import { getServerSession } from '@/lib/auth-session'
@@ -140,7 +141,7 @@ function createSSEStream(
             data: {
               content: fullContent,
               citations:
-                citations.length > 0 ? JSON.parse(JSON.stringify(citations)) : undefined,
+                citations.length > 0 ? (citations as unknown as Prisma.InputJsonValue) : undefined,
             },
           })
           safeEnqueue({
@@ -188,7 +189,7 @@ async function persistPartialOrCleanup(messageId: string, partial: string) {
         data: {
           content: partial,
           citations:
-            citations.length > 0 ? JSON.parse(JSON.stringify(citations)) : undefined,
+            citations.length > 0 ? (citations as unknown as Prisma.InputJsonValue) : undefined,
         },
       })
     } else {
