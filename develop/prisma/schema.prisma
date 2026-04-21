@@ -26,6 +26,7 @@ model User {
   sessions Session[]
   projects Project[]
   chats    Chat[]
+  assets   Asset[]
 
   @@map("users")
 }
@@ -84,8 +85,9 @@ model Project {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  user  User   @relation(fields: [userId], references: [id], onDelete: Cascade)
-  chats Chat[]
+  user   User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  chats  Chat[]
+  assets Asset[]
 
   @@index([userId])
   @@map("projects")
@@ -101,9 +103,10 @@ model Chat {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  project  Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  messages Message[]
+  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project          Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  messages         Message[]
+  originatedAssets Asset[]
 
   @@index([userId])
   @@index([projectId])
@@ -129,7 +132,8 @@ model Message {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  chat           Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
+  generatedAsset Asset? @relation(fields: [generatedAssetId], references: [id], onDelete: SetNull)
 
   @@index([chatId])
   @@map("messages")
@@ -141,4 +145,57 @@ enum MessageRole {
   system
 
   @@map("message_role")
+}
+
+// Asset — Document 또는 Reference. polymorphic.
+// ADR-0014: 단일 테이블 + type discriminator + 개별 nullable 컬럼 하이브리드.
+// - 공통 필드: id, userId, projectId?, type, title, originChatId?, createdAt, updatedAt
+// - type='reference'일 때만 referenceKind/referenceUrl/referenceText 채움
+// - type='document'일 때만 documentContent 채움
+// 타입별 제약은 애플리케이션 레이어(zod discriminatedUnion, 타입 가드)에서 강제한다.
+model Asset {
+  id           String    @id @default(cuid())
+  userId       String    @map("user_id")
+  projectId    String?   @map("project_id")
+  type         AssetType
+  title        String    @db.VarChar(200)
+  originChatId String?   @map("origin_chat_id")
+
+  // Reference 전용 (type='reference'일 때만)
+  referenceKind ReferenceKind? @map("reference_kind")
+  referenceUrl  String?        @map("reference_url")  @db.VarChar(2048)
+  referenceText String?        @map("reference_text") @db.Text
+
+  // Document 전용 (type='document'일 때만). TipTap JSON.
+  documentContent Json? @map("document_content")
+
+  createdAt DateTime @default(now()) @map("created_at")
+  updatedAt DateTime @updatedAt      @map("updated_at")
+
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project    Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  originChat Chat?    @relation(fields: [originChatId], references: [id], onDelete: SetNull)
+
+  // Message.generatedAssetId 역참조.
+  generatingMessages Message[]
+
+  @@index([userId])
+  @@index([projectId])
+  @@index([originChatId])
+  @@index([userId, type])
+  @@map("assets")
+}
+
+enum AssetType {
+  document
+  reference
+
+  @@map("asset_type")
+}
+
+enum ReferenceKind {
+  url
+  text
+
+  @@map("reference_kind")
 }
