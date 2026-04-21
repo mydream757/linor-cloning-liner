@@ -56,12 +56,13 @@
 - 관련 ADR: [0011](architecture/decisions/0011-auth-session-and-route-protection.md), [0012](architecture/decisions/0012-dev-credentials-provider.md)
 
 ### 3. Liner 뷰: Chat 기반 AI 대화 (SSE 스트리밍) + 출처·인용 배지
-- **상태**: 구현 중 (D1~D3 완료, D4 예정)
-- **관련 엔티티**: Chat, Message, Asset(Reference)
-- **설명**: 현재 Chat에 메시지 전송, LLM SDK(Anthropic/Gemini 듀얼)로 SSE 스트리밍 응답 처리. 선택된 Reference Asset들을 컨텍스트로 주입. 응답 본문 내 `[n]` 출처 배지를 클릭하면 원문/근거 표시. **학습 핵심: SSE 저수준 직접 구현**.
-- 기획: [plan/features/3-liner.md](plan/features/3-liner.md) (v0.3)
-- 디자인: [design/features/3-liner.md](design/features/3-liner.md) (v0.1)
+- **상태**: 완료
+- **관련 엔티티**: Chat, Message, Asset(Reference — stub)
+- **설명**: 현재 Chat에 메시지 전송, LLM SDK(Anthropic/Gemini 듀얼)로 SSE 스트리밍 응답 처리. 응답 본문 내 `[n]` 출처 배지(인라인) + 우측 출처 패널(stub 데이터). 사이드바 Project 트리(caret 펼침 + Chat 중첩) + 최근 기록 섹션(cross-project recent). **학습 핵심: SSE 저수준 직접 구현** 완료.
+- 기획: [plan/features/3-liner.md](plan/features/3-liner.md) (v0.5)
+- 디자인: [design/features/3-liner.md](design/features/3-liner.md) (v0.2)
 - 관련 ADR: [0013](architecture/decisions/0013-llm-provider-abstraction.md)
+- 남은 기술 부채: [T-004](architecture/tech-debt.md#t-004) (에러 재시도 시 user 메시지 DB 중복), [T-005](architecture/tech-debt.md#t-005) (ResponseActions stub 아이콘 미구현)
 
 ### 4. Asset 관리 (Reference + Document) + 미할당 Chat
 - **상태**: 후보
