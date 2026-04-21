@@ -7,6 +7,7 @@
 // - 디자인: design/features/1-app-shell.md, design/features/2-auth.md, 4-asset.md
 
 import { CreateProjectButton } from '@/components/app-shell/create-project-button'
+import { NewChatButton } from '@/components/app-shell/new-chat-button'
 import { ProfileSection } from '@/components/app-shell/profile-section'
 import { ProjectList } from '@/components/app-shell/project-list'
 import { SidebarShell } from '@/components/app-shell/sidebar-shell'
@@ -19,8 +20,9 @@ export async function Sidebar() {
   return (
     <SidebarShell>
       <div className="flex min-h-0 flex-1 flex-col gap-3 px-2 py-1">
-        <div className="mx-2">
-          <CreateProjectButton className="flex h-8 w-full items-center rounded-md bg-surface-overlay px-2 text-left text-sm text-text-primary hover:opacity-90">
+        <div className="mx-2 flex flex-col gap-1">
+          <NewChatButton />
+          <CreateProjectButton className="flex h-8 w-full items-center rounded-md px-2 text-left text-sm text-text-primary transition-colors hover:bg-bg-hover">
             + 새 Project
           </CreateProjectButton>
         </div>

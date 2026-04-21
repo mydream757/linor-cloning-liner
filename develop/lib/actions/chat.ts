@@ -136,17 +136,32 @@ export async function deleteChat(
 
   if (existing.projectId) {
     revalidatePath(`/p/${existing.projectId}`, 'layout')
+  } else {
+    // 미할당 Chat — 사이드바 "최근 기록" 갱신.
+    revalidatePath('/', 'layout')
   }
 
-  if (parsed.data.deleteCurrent && existing.projectId) {
-    const next = await prisma.chat.findFirst({
-      where: { projectId: existing.projectId },
-      orderBy: { updatedAt: 'desc' },
-    })
-    if (next) {
-      redirect(`/p/${existing.projectId}/liner/c/${next.id}`)
+  if (parsed.data.deleteCurrent) {
+    if (existing.projectId) {
+      const next = await prisma.chat.findFirst({
+        where: { projectId: existing.projectId },
+        orderBy: { updatedAt: 'desc' },
+      })
+      if (next) {
+        redirect(`/p/${existing.projectId}/liner/c/${next.id}`)
+      }
+      redirect(`/p/${existing.projectId}/liner`)
+    } else {
+      // 미할당 Chat 삭제 — 다른 미할당 Chat 또는 /liner(빈 상태)로.
+      const next = await prisma.chat.findFirst({
+        where: { userId: user.id, projectId: null },
+        orderBy: { updatedAt: 'desc' },
+      })
+      if (next) {
+        redirect(`/liner/c/${next.id}`)
+      }
+      redirect('/liner')
     }
-    redirect(`/p/${existing.projectId}/liner`)
   }
 
   return { ok: true, data: { id: parsed.data.id } }

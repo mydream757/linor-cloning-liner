@@ -5,7 +5,7 @@
 // - HTML <dialog>로 삭제 confirm
 // - 부모 <ChatListClient />의 중앙 editingId로 rename 편집 모드 전환
 // - 활성 Chat 삭제 시 deleteCurrent flag로 서버에서 다른 Chat/빈 상태로 redirect
-// - chat.projectId에서 링크 생성 — Project 트리와 "최근 기록" 양쪽에서 재사용 가능.
+// - 링크: projectId 있으면 /p/[pid]/liner/c/[id], 없으면 /liner/c/[id] (미할당)
 
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import type { Chat } from '@prisma/client'
@@ -23,10 +23,11 @@ type Props = {
   onStopEdit: () => void
 }
 
-export function ChatItem(props: Props) {
-  // Chat은 Project 귀속(MVP). projectId null인 Chat은 사이드바 어디에도 링크 못 걸어 렌더 스킵.
-  if (!props.chat.projectId) return null
+function chatHref(chat: Chat): string {
+  return chat.projectId ? `/p/${chat.projectId}/liner/c/${chat.id}` : `/liner/c/${chat.id}`
+}
 
+export function ChatItem(props: Props) {
   return props.isEditing ? (
     <RenameMode chat={props.chat} onDone={props.onStopEdit} />
   ) : (
@@ -58,7 +59,7 @@ function DisplayMode({
       }`}
     >
       <Link
-        href={`/p/${chat.projectId}/liner/c/${chat.id}`}
+        href={chatHref(chat)}
         aria-current={isActive ? 'page' : undefined}
         title={chat.title}
         onDoubleClick={(e) => {
