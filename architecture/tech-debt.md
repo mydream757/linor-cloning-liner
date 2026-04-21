@@ -36,18 +36,6 @@ last_updated: 2026-04-15
 
 ## Open
 
-### T-001: color-primary / color-error 토큰 미정
-- **기록일**: 2026-04-15
-- **배경**: 기능 1 디자인 레퍼런스 수집에서 브랜드 색(`color-primary`)과 에러 색(`color-error`)을 실측하지 못했다. Liner Scholar에서 명확히 구분되는 브랜드 색 CTA나 에러 상태가 관찰되지 않았고, 기능 1의 사용 영역(새 프로젝트 버튼, 삭제 confirm 버튼)이 소수였다.
-- **왜 지금 부채로 남기나**: 기능 1에선 브랜드 색이 필요한 곳이 "새 프로젝트" CTA 1개, 에러 색이 필요한 곳이 삭제 confirm 버튼 1개뿐이다. 지금 우리가 결정(`결정` 출처)으로 값을 박으면 기능 4(Asset 관리, Document 삭제 등)에서 더 본격적인 맥락이 나왔을 때 재조정 비용이 이중으로 든다. 기능 4 Developer 단계에 가서 **실제 사용 맥락과 함께 한꺼번에 결정**하는 편이 경제적이다.
-- **임시 처치**: 디자인 명세(design/features/1-app-shell.md)에서 "새 프로젝트" 버튼과 삭제 confirm 버튼은 `color-surface-overlay` / `color-bg-active-strong` 같은 주변 토큰으로 대체해 놓은 상태.
-- **해소 조건**: 기능 4 Developer 단계 진입 시 원본 라이너의 Asset 관련 UI를 추가 실측하면서 브랜드·에러 색을 확정하고 `design/design-tokens.md`에 등록한다. 등록되는 순간 기능 1 디자인 명세도 해당 토큰 이름으로 교체.
-- **영향 파일**:
-  - `design/design-tokens.md` (브랜드 색상·시맨틱 색상 테이블)
-  - `design/features/1-app-shell.md` (상태 매트릭스, 디자인 결정 근거)
-  - 기능 1 구현 시 관련 컴포넌트 (버튼 스타일)
-- **상태**: Open
-- **해소 커밋**: —
 
 ### T-002: DB 연결 실패 시 사용자 친화적 에러 처리 없음
 - **기록일**: 2026-04-16
@@ -97,4 +85,8 @@ last_updated: 2026-04-15
 
 ## Resolved
 
-(아직 없음)
+### T-001: color-primary / color-error 토큰 미정
+- **기록일**: 2026-04-15
+- **해소일**: 2026-04-21
+- **해소 방식**: 기능 4 Designer Step C에서 `design/references/4-asset/measurements.md` v0.3 실측 기반으로 `color-primary` 재확인 + `color-error` 신규 등록. 당초 해소 시점이던 "기능 4 Developer 단계 진입"보다 앞당겨 Designer 단계에서 해소 — Asset 삭제 UI 실측 때 error 색상도 함께 관찰됐기 때문. `color-primary`(rgb(35,102,56))는 기능 3에서 이미 확정됐고, `color-error`(rgb(219,35,35))는 이 단계에서 확정.
+- **해소 커밋**: (Step C 커밋 후 오케스트레이터가 커밋 해시를 여기에 기록)

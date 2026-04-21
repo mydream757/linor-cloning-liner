@@ -1,6 +1,6 @@
 ---
-version: 0.3
-last_updated: 2026-04-15
+version: 0.6
+last_updated: 2026-04-21
 source: 라이너 원본 서비스 Liner Scholar (scholar.liner.com)
 ---
 
@@ -30,8 +30,9 @@ source: 라이너 원본 서비스 Liner Scholar (scholar.liner.com)
 |--------|---|---|------|
 | color-success | (미확인) | | 성공 상태 |
 | color-warning | (미확인) | | 경고 상태 |
-| color-error | (미확인) | | 에러 상태 |
+| color-error | `rgb(219,35,35)` | devtools — Liner 삭제 확인 버튼 | 에러 상태, 삭제 confirm 버튼, 파괴적 액션 |
 | color-info | (미확인) | | 정보 안내 |
+| color-citation-text | `rgb(194,229,200)` | devtools — Liner 인용 텍스트 (브랜드 그린 계열) | 출처 패널 내 인용 텍스트 강조. 브랜드 그린(`color-primary`)의 밝은 톤 |
 
 ### 배경/표면
 
@@ -115,7 +116,8 @@ source: 라이너 원본 서비스 Liner Scholar (scholar.liner.com)
 |--------|---|---|------|
 | radius-sm | 6px | devtools — Chat 목록 항목, 출처 카드 | 작은 요소 (리스트 항목, 카드) |
 | radius-md | 8px | devtools — pill 개별 버튼 (`rounded-[8px]`), 출처 배지 | 버튼, 입력 필드, 배지 |
-| radius-lg | 10px | devtools — pill 컨테이너 (`rounded-m`) | 카드, 모달 |
+| radius-lg | 10px | devtools — pill 컨테이너 (`rounded-m`) | 카드, 모달 (일반 분리감용) |
+| radius-dialog | 12px | devtools — Liner 삭제 다이얼로그. 입력 모달은 14px 관찰됨 — 12px을 기준으로 정의하고, 입력 모달의 14px은 `radius-dialog`의 상한 변형으로 구현 시 자유롭게 적용 | 다이얼로그·모달 전용. `radius-lg`(카드·일반 분리감용)와 구분해 사용 |
 | radius-xl | 20px | devtools — 사용자 메시지 버블 | 메시지 버블 |
 | radius-full | 28px+ | devtools — 입력카드(28px), 원형 버튼(200px) | 둥근 카드, 원형 요소 |
 
@@ -124,7 +126,8 @@ source: 라이너 원본 서비스 Liner Scholar (scholar.liner.com)
 | 토큰명 | 값 | 출처 | 용도 |
 |--------|---|---|------|
 | shadow-sm | (미확인) | | 미세한 분리감 |
-| shadow-md | (미확인 — Tailwind `shadow-normal` 클래스만 확인) | devtools — pill 활성 버튼 drop shadow | 활성 상태 강조 (pill 활성 버튼 등) |
+| shadow-md | (미확인 — Tailwind `shadow-normal` 클래스만 확인) | devtools — pill 활성 버튼 drop shadow | 활성 상태 강조 (pill 활성 버튼 등) — 일반 분리감용. `shadow-dialog`는 다이얼로그 전용 |
+| shadow-dialog | `0px 0px 1px rgba(0,0,0,0.22), 0px 1px 8px rgba(0,0,0,0.22), 0px 2px 16px rgba(0,0,0,0.26)` | devtools — Liner 삭제 다이얼로그 | 다이얼로그·모달 그림자 전용 |
 | shadow-lg | (미확인) | | 모달, 팝오버 |
 
 ## 모션
@@ -137,6 +140,14 @@ source: 라이너 원본 서비스 Liner Scholar (scholar.liner.com)
 
 ## Changelog
 
+- 0.6 (2026-04-21): 기능 4 Designer Step C — measurements v0.3 실측 기반 T-001 해소 및 신규 토큰 3종 추가.
+  - **프론트매터 버전 불일치 정정**: 실제 최신 버전은 v0.5(Changelog 기준)였으나 프론트매터가 0.3으로 잘못 표기되어 있었음. v0.6 업데이트를 기점으로 프론트매터를 Changelog와 일치시킴.
+  - **`color-error` 확정** (T-001 해소): `rgb(219,35,35)` — 기능 4 기획 4 Design Step B에서 Asset 삭제 확인 버튼을 devtools 실측하면서 함께 관찰. 기존 "(미확인)" → 확정값으로 교체. 에러 상태·삭제 confirm·파괴적 액션에 사용.
+  - **`color-citation-text` 신규**: `rgb(194,229,200)` — devtools 실측 (Liner 인용 텍스트, 브랜드 그린 계열 밝은 톤). 출처 패널 내 인용 텍스트 강조용.
+  - **`shadow-dialog` 신규**: `0px 0px 1px rgba(0,0,0,0.22), 0px 1px 8px rgba(0,0,0,0.22), 0px 2px 16px rgba(0,0,0,0.26)` — devtools 실측 (Liner 삭제 다이얼로그). 다이얼로그·모달 전용 그림자.
+  - **`radius-dialog` 신규**: 12px — devtools 실측 (삭제 다이얼로그). `radius-lg`(10px, 일반 카드·분리감용)와 구분해 다이얼로그 전용으로 분리. 입력 모달의 14px은 `radius-dialog` 상한 변형으로 허용.
+  - **`shadow-md` 주석 보강**: "일반 분리감용 — `shadow-dialog`는 다이얼로그 전용" 명기.
+  - **근거 문서**: `design/references/4-asset/measurements.md` v0.3, `architecture/tech-debt.md` T-001 해소 조건.
 - 0.5 (2026-04-17): 기능 3 실측 반영. `color-primary` rgb(35,102,56) 확정 (전송 버튼 활성). `color-bg-badge` rgb(49,49,51) 추가 (출처 배지). 타이포그래피 `text-heading-1`(32px/500), `text-heading-2`(22px/600), `text-heading-3`(17px/600), `text-body`(16px/350/25.6px) 실측 확정. `radius-sm`(6px) 확정, `radius-xl`(20px), `radius-full`(28px+) 추가.
 - 0.4 (2026-04-16): `color-border-normal` (`rgba(233,233,235,0.28)`) 추가. 기능 2 실측에서 로그인 프로바이더 버튼 border + 프로필 메뉴 구분선에 동일 값이 반복 사용됨을 확인. 기존 `color-border-subtle`(0.20)과 `color-border-default`(불투명 #39393B) 사이의 중간 단계.
 - 0.3 (2026-04-15): `color-bg-active-subtle`을 `#272729` → `rgba(255,255,255,0.07)`로 재결정. 기존 값은 `color-bg-secondary`(사이드바 배경)와 완전히 동일해 사이드바 내 선택 상태가 시각적으로 드러나지 않았다(기능 1 D3 브라우저 검증 중 사용자 피드백). 7% 흰색 오버레이로 가독 가능한 수준의 강조를 확보. 출처는 `추정` → `결정`으로 승격. 상세 근거는 `architecture/tech-debt.md` T-001 관련 관찰 참조.
