@@ -13,34 +13,34 @@ import { ProjectItem } from '@/components/app-shell/project-item'
 
 const VIEW_SEGMENTS = ['liner', 'write', 'scholar'] as const
 
-function extractView(pathname: string): string {
+function extractRoute(pathname: string): { projectId: string | null; view: string } {
   const segments = pathname.split('/').filter(Boolean)
-  const view = segments[2]
-  for (const v of VIEW_SEGMENTS) {
-    if (view === v) return v
+  if (segments[0] === 'p' && segments[1]) {
+    const view = segments[2]
+    const matched = VIEW_SEGMENTS.find((v) => v === view) ?? 'liner'
+    return { projectId: segments[1], view: matched }
   }
-  return 'liner'
+  // 미할당 — /[view]/... 또는 기타
+  const view = segments[0]
+  const matched = VIEW_SEGMENTS.find((v) => v === view) ?? 'liner'
+  return { projectId: null, view: matched }
 }
 
 type ProjectWithChats = Project & { chats: Chat[] }
 
-export function ProjectListClient({
-  projects,
-  currentProjectId,
-}: {
-  projects: ProjectWithChats[]
-  currentProjectId: string
-}) {
+export function ProjectListClient({ projects }: { projects: ProjectWithChats[] }) {
+  const pathname = usePathname()
+  const { projectId: currentProjectId, view: currentView } = extractRoute(pathname)
+
   const [editingId, setEditingId] = useState<string | null>(null)
   const [expandedIds, setExpandedIds] = useState<Set<string>>(
-    () => new Set([currentProjectId]),
+    () => new Set(currentProjectId ? [currentProjectId] : []),
   )
-  const pathname = usePathname()
-  const currentView = extractView(pathname)
 
   // 현재 Project가 바뀌면 자동 펼침 (기존 펼침 상태는 유지).
-  // setState는 effect body가 아닌 마이크로태스크에서 호출 (React 19 규칙 회피).
+  // 미할당 라우트(currentProjectId=null)에서는 아무 것도 펼치지 않는다.
   useEffect(() => {
+    if (!currentProjectId) return
     queueMicrotask(() =>
       setExpandedIds((prev) => {
         if (prev.has(currentProjectId)) return prev

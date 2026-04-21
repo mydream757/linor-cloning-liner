@@ -11,6 +11,14 @@ export const listChatsByProject = cache(async (projectId: string) => {
   })
 })
 
+// 미할당 Chat 목록 (project_id IS NULL). 미할당 Write 뷰에서 재료 선택용.
+export const listUnassignedChatsByUser = cache(async (userId: string) => {
+  return prisma.chat.findMany({
+    where: { userId, projectId: null },
+    orderBy: { updatedAt: 'desc' },
+  })
+})
+
 // 사이드바 "최근 기록" 섹션용 — user의 cross-project 최신 Chat N개.
 export const listRecentChatsByUser = cache(async (userId: string, limit = 10) => {
   return prisma.chat.findMany({

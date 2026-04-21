@@ -1,8 +1,10 @@
 // 사이드바 (Server Component).
 // - 접힘/펼침 UI는 SidebarShell(Client)에 위임, server-first 원칙 유지.
-// - D6에서 인라인 NewProjectForm → CreateProjectButton 모달 트리거로 승격.
-// - 기능 2 D4: 하단 프로필 영역 추가.
-// - 디자인: design/features/1-app-shell.md, design/features/2-auth.md
+// - currentProjectId prop을 폐지 — 하위 클라이언트 컴포넌트가 usePathname으로
+//   현재 경로의 project·view·chat·document를 직접 파싱한다. Project 스코프와
+//   미할당 스코프 양쪽이 같은 사이드바를 공유하도록 함.
+// - 기능 4 D4: 전역 "+ 새 대화" 버튼은 Phase B에서 추가.
+// - 디자인: design/features/1-app-shell.md, design/features/2-auth.md, 4-asset.md
 
 import { CreateProjectButton } from '@/components/app-shell/create-project-button'
 import { ProfileSection } from '@/components/app-shell/profile-section'
@@ -11,7 +13,7 @@ import { SidebarShell } from '@/components/app-shell/sidebar-shell'
 import { RecentsSection } from '@/components/chat/recents-section'
 import { getRequiredSession } from '@/lib/auth-session'
 
-export async function Sidebar({ currentProjectId }: { currentProjectId: string }) {
+export async function Sidebar() {
   const { user } = await getRequiredSession()
 
   return (
@@ -27,7 +29,7 @@ export async function Sidebar({ currentProjectId }: { currentProjectId: string }
           <div className="px-2 py-1 text-xs uppercase tracking-wide text-text-secondary">
             프로젝트
           </div>
-          <ProjectList currentProjectId={currentProjectId} />
+          <ProjectList />
         </div>
 
         <RecentsSection />

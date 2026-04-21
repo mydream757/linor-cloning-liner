@@ -1,16 +1,12 @@
 // Project 목록 (Server Component).
 // - listProjectsWithChatsByUser는 Project + 각 Chat을 한 번에 로드 (트리 UI용).
-// - 데이터 fetch는 서버에서, 인터랙티브 렌더는 <ProjectListClient />로 위임 (ADR-0010).
+// - 현재 projectId는 ProjectListClient가 usePathname으로 파싱.
 
 import { ProjectListClient } from '@/components/app-shell/project-list-client'
 import { getRequiredSession } from '@/lib/auth-session'
 import { listProjectsWithChatsByUser } from '@/lib/queries/project'
 
-export async function ProjectList({
-  currentProjectId,
-}: {
-  currentProjectId: string
-}) {
+export async function ProjectList() {
   const { user } = await getRequiredSession()
   const projects = await listProjectsWithChatsByUser(user.id)
 
@@ -22,5 +18,5 @@ export async function ProjectList({
     )
   }
 
-  return <ProjectListClient projects={projects} currentProjectId={currentProjectId} />
+  return <ProjectListClient projects={projects} />
 }

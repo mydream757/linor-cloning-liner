@@ -18,14 +18,15 @@ const titleSchema = z
   .max(200, '200자 이하로 입력해주세요')
 
 // 첫 메시지 전송 시 자동 생성. title은 첫 메시지 앞 30자.
+// projectId는 optional — 미할당 Chat(도메인 모델 v0.4 §Project 미할당)이 1급 지원.
 const createChatSchema = z.object({
-  projectId: z.string().min(1),
+  projectId: z.string().min(1).optional(),
   title: titleSchema,
 })
 
 export async function createChat(
   data: z.infer<typeof createChatSchema>,
-): Promise<ActionResult<{ id: string }>> {
+): Promise<ActionResult<{ id: string; projectId: string | null }>> {
   const parsed = createChatSchema.safeParse(data)
   if (!parsed.success) {
     return { ok: false, error: { fields: z.flattenError(parsed.error).fieldErrors } }
@@ -33,22 +34,30 @@ export async function createChat(
 
   const { user } = await getRequiredSession()
 
-  // Project 소유권 검증
-  const project = await prisma.project.findUnique({ where: { id: parsed.data.projectId } })
-  if (!project || project.userId !== user.id) {
-    return { ok: false, error: { message: '해당 Project를 찾을 수 없습니다' } }
+  // Project 소유권 검증 (projectId가 있을 때만)
+  if (parsed.data.projectId) {
+    const project = await prisma.project.findUnique({ where: { id: parsed.data.projectId } })
+    if (!project || project.userId !== user.id) {
+      return { ok: false, error: { message: '해당 Project를 찾을 수 없습니다' } }
+    }
   }
 
   const chat = await prisma.chat.create({
     data: {
       userId: user.id,
-      projectId: parsed.data.projectId,
+      projectId: parsed.data.projectId ?? null,
       title: parsed.data.title,
     },
   })
 
-  revalidatePath(`/p/${parsed.data.projectId}`, 'layout')
-  return { ok: true, data: { id: chat.id } }
+  if (parsed.data.projectId) {
+    // Project 스코프 사이드바(Project 트리) 갱신.
+    revalidatePath(`/p/${parsed.data.projectId}`, 'layout')
+  } else {
+    // 미할당 Chat 생성 — 사이드바 "최근 기록"에 반영.
+    revalidatePath('/', 'layout')
+  }
+  return { ok: true, data: { id: chat.id, projectId: chat.projectId } }
 }
 
 // Chat 이름 변경

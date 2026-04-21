@@ -1,13 +1,11 @@
-// Project 스코프 공유 레이아웃.
-// - 현재 Project를 검증하고 (없으면 404), 사이드바·상단 헤더를 래핑한다.
-// - 하위 page(liner/write/scholar)는 메인 패널에 들어간다.
+// Project 스코프 검증 레이어 (Server Component).
+// - 공통 chrome(Sidebar + TopHeader + main)은 (app)/layout.tsx에서 마운트.
+// - 여기선 Project 존재·소유권만 검증하고 LastLocationTracker를 띄운다.
 // - getProject는 React.cache로 래핑되어 있어 page에서 다시 호출해도 중복 쿼리 없음 (ADR-0007).
 
 import { notFound } from 'next/navigation'
 
 import { LastLocationTracker } from '@/components/app-shell/last-location-tracker'
-import { Sidebar } from '@/components/app-shell/sidebar'
-import { TopHeader } from '@/components/app-shell/top-header'
 import { getRequiredSession } from '@/lib/auth-session'
 import { getProject } from '@/lib/queries/project'
 
@@ -27,13 +25,9 @@ export default async function ProjectLayout({
   }
 
   return (
-    <div className="flex flex-1 min-h-0">
-      <Sidebar currentProjectId={projectId} />
-      <div className="flex flex-1 flex-col min-w-0">
-        <TopHeader currentProjectId={projectId} />
-        <main className="flex-1 min-h-0 overflow-auto">{children}</main>
-      </div>
+    <>
+      {children}
       <LastLocationTracker projectId={projectId} />
-    </div>
+    </>
   )
 }

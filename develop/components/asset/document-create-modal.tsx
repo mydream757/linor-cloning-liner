@@ -14,8 +14,10 @@ import { useMemo, useRef, useState, useTransition } from 'react'
 import { createDocument } from '@/lib/actions/asset'
 
 interface Props {
-  projectId: string
-  // Project 스코프 Chat 목록. 재료 선택 섹션에서 체크박스로 표시.
+  // 미할당 Document 생성 시 null. Project 스코프일 때만 ID 전달.
+  projectId: string | null
+  // Chat 목록(현재 projectId 스코프, 또는 미할당 컨텍스트면 user의 미할당 Chat).
+  // 재료 선택 섹션에서 체크박스로 표시.
   chats: Chat[]
 }
 
@@ -58,7 +60,7 @@ export function DocumentCreateModal({ projectId, chats }: Props) {
     startTransition(async () => {
       const result = await createDocument({
         title,
-        projectId,
+        projectId: projectId ?? undefined,
         sourceChatIds: selectedChatIds.length > 0 ? selectedChatIds : undefined,
       })
       if (!result.ok) {
@@ -67,7 +69,11 @@ export function DocumentCreateModal({ projectId, chats }: Props) {
         return
       }
       dialogRef.current?.close()
-      router.push(`/p/${projectId}/write/d/${result.data.id}`)
+      const createdProjectId = result.data.projectId ?? projectId
+      const editUrl = createdProjectId
+        ? `/p/${createdProjectId}/write/d/${result.data.id}`
+        : `/write/d/${result.data.id}`
+      router.push(editUrl)
     })
   }
 

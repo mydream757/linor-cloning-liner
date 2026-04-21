@@ -12,7 +12,8 @@ import { createChat } from '@/lib/actions/chat'
 import { ChatComposer } from './chat-composer'
 
 interface Props {
-  projectId: string
+  // 미할당 Chat 생성 시 null. Project 스코프일 때만 ID 전달.
+  projectId: string | null
 }
 
 export function EmptyComposer({ projectId }: Props) {
@@ -24,18 +25,24 @@ export function EmptyComposer({ projectId }: Props) {
     setError(null)
     startTransition(async () => {
       const title = content.slice(0, 30).trim()
-      const result = await createChat({ projectId, title })
+      const result = await createChat({
+        projectId: projectId ?? undefined,
+        title,
+      })
       if (!result.ok) {
         setError(result.error.message ?? '대화를 시작할 수 없습니다')
         return
       }
-      const { id: chatId } = result.data
+      const { id: chatId, projectId: createdProjectId } = result.data
       try {
         sessionStorage.setItem(`pending:${chatId}`, content)
       } catch {
         // sessionStorage 접근 불가 — 메시지는 유실되지만 Chat은 생성됨
       }
-      router.push(`/p/${projectId}/liner/c/${chatId}`)
+      const nextUrl = createdProjectId
+        ? `/p/${createdProjectId}/liner/c/${chatId}`
+        : `/liner/c/${chatId}`
+      router.push(nextUrl)
     })
   }
 
