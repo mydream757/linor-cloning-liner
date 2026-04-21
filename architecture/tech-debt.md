@@ -85,4 +85,4 @@ last_updated: 2026-04-15
 - **해소일**: 2026-04-22
 - **해소 방식**: 기능 4 D4-C에서 재시도 플로우 재설계. (a) SSE `stream_start` 이벤트에 `userMessageId` 필드 추가 — 서버가 DB에 확정한 user 메시지 ID를 클라이언트가 추적. (b) `useChatStream`이 `lastUserMessageId` 상태를 노출. (c) `ChatView.handleRetry`가 `sendMessage(content, { retryUserMessageId })`로 호출. (d) Route Handler가 `retryUserMessageId`가 있으면 user 메시지 재생성을 건너뛰고 해당 ID를 재사용 + 해당 user 메시지 이후의 failed assistant 메시지들을 정리 후 새 빈 assistant 메시지로 교체. 결과: 재시도 시 같은 user 메시지가 재사용되어 중복 없음, 이전 실패 시도의 빈/부분 assistant 레코드도 청소됨.
 - **영향 파일**: `develop/app/api/chat/[chatId]/messages/route.ts`, `develop/lib/chat/use-chat-stream.ts`, `develop/lib/chat/sse-types.ts`, `develop/components/chat/chat-view.tsx`
-- **해소 커밋**: (D4-C 커밋 후 해시 기록)
+- **해소 커밋**: `eb9b784`
