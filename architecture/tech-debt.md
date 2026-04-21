@@ -89,4 +89,4 @@ last_updated: 2026-04-15
 - **기록일**: 2026-04-15
 - **해소일**: 2026-04-21
 - **해소 방식**: 기능 4 Designer Step C에서 `design/references/4-asset/measurements.md` v0.3 실측 기반으로 `color-primary` 재확인 + `color-error` 신규 등록. 당초 해소 시점이던 "기능 4 Developer 단계 진입"보다 앞당겨 Designer 단계에서 해소 — Asset 삭제 UI 실측 때 error 색상도 함께 관찰됐기 때문. `color-primary`(rgb(35,102,56))는 기능 3에서 이미 확정됐고, `color-error`(rgb(219,35,35))는 이 단계에서 확정.
-- **해소 커밋**: (Step C 커밋 후 오케스트레이터가 커밋 해시를 여기에 기록)
+- **해소 커밋**: `fe1e698`
