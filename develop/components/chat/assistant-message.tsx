@@ -12,12 +12,25 @@ import { CitationBadge } from './citation-badge'
 import { ResponseActions } from './response-actions'
 
 interface Props {
+  // 영속된 메시지의 ID. 스트리밍 중 또는 tmp 메시지는 undefined → 포워딩 불가.
+  messageId?: string
   content: string
   citations?: Citation[]
+  // 이 메시지가 이미 Document로 내보내졌으면 해당 Asset ID. null이면 아직 안 됨.
+  generatedAssetId?: string | null
+  // 포워딩 후 Write 뷰로 이동할 때 사용.
+  projectId?: string | null
   onOpenCitations?: (citations: Citation[]) => void
 }
 
-export function AssistantMessage({ content, citations, onOpenCitations }: Props) {
+export function AssistantMessage({
+  messageId,
+  content,
+  citations,
+  generatedAssetId = null,
+  projectId = null,
+  onOpenCitations,
+}: Props) {
   return (
     <div className="text-text-primary">
       <ReactMarkdown
@@ -68,10 +81,18 @@ export function AssistantMessage({ content, citations, onOpenCitations }: Props)
       >
         {content}
       </ReactMarkdown>
-      {citations && citations.length > 0 && onOpenCitations ? (
+      {messageId ? (
         <ResponseActions
-          count={citations.length}
-          onOpenCitations={() => onOpenCitations(citations)}
+          messageId={messageId}
+          messageContent={content}
+          citationCount={citations?.length ?? 0}
+          onOpenCitations={
+            citations && citations.length > 0 && onOpenCitations
+              ? () => onOpenCitations(citations)
+              : undefined
+          }
+          generatedAssetId={generatedAssetId}
+          projectId={projectId}
         />
       ) : null}
     </div>

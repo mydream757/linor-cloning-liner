@@ -46,6 +46,16 @@ export const listUnassignedDocumentsByUser = cache(async (userId: string) => {
   })
 })
 
+// 사이드바 "최근 기록" 섹션용 — user의 cross-project 최신 Document N개.
+// Write 뷰 활성 시 Chat 목록을 대체해 노출한다 (기능 4 D3-B, 디자인 §2-10).
+export const listRecentDocumentsByUser = cache(async (userId: string, limit = 10) => {
+  return prisma.asset.findMany({
+    where: { userId, type: 'document' },
+    orderBy: { updatedAt: 'desc' },
+    take: limit,
+  })
+})
+
 // 단일 Asset 조회 (소유권은 호출부에서 검증).
 export const getAsset = cache(async (assetId: string) => {
   return prisma.asset.findUnique({ where: { id: assetId } })

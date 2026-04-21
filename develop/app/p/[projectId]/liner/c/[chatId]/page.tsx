@@ -29,7 +29,8 @@ export default async function ChatPage({
       role: m.role as 'user' | 'assistant',
       content: m.content,
       citations: m.citations ? (m.citations as unknown as Citation[]) : undefined,
+      generatedAssetId: m.generatedAssetId,
     }))
 
-  return <ChatView chatId={chatId} initialMessages={initialMessages} />
+  return <ChatView chatId={chatId} projectId={projectId} initialMessages={initialMessages} />
 }

@@ -20,10 +20,12 @@ import { MessageList } from './message-list'
 
 interface Props {
   chatId: string
+  // 포워딩 후 Write 뷰로 이동할 때 사용. 미할당 Chat은 D4에서 지원.
+  projectId: string | null
   initialMessages: ClientMessage[]
 }
 
-export function ChatView({ chatId, initialMessages }: Props) {
+export function ChatView({ chatId, projectId, initialMessages }: Props) {
   const router = useRouter()
   const [messages, setMessages] = useState<ClientMessage[]>(initialMessages)
   const [lastUserContent, setLastUserContent] = useState<string | null>(null)
@@ -81,6 +83,7 @@ export function ChatView({ chatId, initialMessages }: Props) {
       <div className="flex min-w-0 flex-1 flex-col">
         <MessageList
           messages={messages}
+          projectId={projectId}
           streamingContent={streamingMessage?.content ?? null}
           onOpenCitations={(citations) => setActiveCitations(citations)}
         />
