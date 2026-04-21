@@ -18,6 +18,11 @@ interface UseChatStreamOptions {
   onStreamEnd?: (message: StreamingMessage) => void
 }
 
+interface SendMessageOptions {
+  /** T-004 재시도 모드. 기존 user 메시지 ID를 재사용해 DB 중복 생성 방지. */
+  retryUserMessageId?: string
+}
+
 interface UseChatStreamReturn {
   /** 현재 스트리밍 중인 어시스턴트 메시지 */
   streamingMessage: StreamingMessage | null
@@ -25,8 +30,10 @@ interface UseChatStreamReturn {
   isStreaming: boolean
   /** 에러 상태 */
   error: { message: string; retryable: boolean } | null
-  /** 메시지 전송 + 스트리밍 시작 */
-  sendMessage: (content: string) => Promise<void>
+  /** 가장 최근 user 메시지의 DB ID — stream_start 이벤트에서 갱신. 재시도 시 재사용용. */
+  lastUserMessageId: string | null
+  /** 메시지 전송 + 스트리밍 시작. 재시도 시 options.retryUserMessageId 지정 */
+  sendMessage: (content: string, options?: SendMessageOptions) => Promise<void>
   /** 스트리밍 중단 */
   abort: () => void
 }
@@ -35,6 +42,7 @@ export function useChatStream({ chatId, onStreamEnd }: UseChatStreamOptions): Us
   const [streamingMessage, setStreamingMessage] = useState<StreamingMessage | null>(null)
   const [isStreaming, setIsStreaming] = useState(false)
   const [error, setError] = useState<{ message: string; retryable: boolean } | null>(null)
+  const [lastUserMessageId, setLastUserMessageId] = useState<string | null>(null)
 
   const abortControllerRef = useRef<AbortController | null>(null)
 
@@ -44,7 +52,7 @@ export function useChatStream({ chatId, onStreamEnd }: UseChatStreamOptions): Us
     setIsStreaming(false)
   }, [])
 
-  const sendMessage = useCallback(async (content: string) => {
+  const sendMessage = useCallback(async (content: string, options?: SendMessageOptions) => {
     // 이전 스트림 정리
     abortControllerRef.current?.abort()
     setError(null)
@@ -57,7 +65,10 @@ export function useChatStream({ chatId, onStreamEnd }: UseChatStreamOptions): Us
       const response = await fetch(`/api/chat/${chatId}/messages`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ content }),
+        body: JSON.stringify({
+          content,
+          retryUserMessageId: options?.retryUserMessageId,
+        }),
         signal: abortController.signal,
       })
 
@@ -102,6 +113,8 @@ export function useChatStream({ chatId, onStreamEnd }: UseChatStreamOptions): Us
             case 'stream_start':
               currentMessage = { id: event.messageId, content: '', citations: [] }
               setStreamingMessage(currentMessage)
+              // T-004: 서버가 확정한 user 메시지 ID 추적 — 재시도 시 재사용.
+              setLastUserMessageId(event.userMessageId)
               break
 
             case 'text_delta':
@@ -155,5 +168,12 @@ export function useChatStream({ chatId, onStreamEnd }: UseChatStreamOptions): Us
     }
   }, [chatId, onStreamEnd])
 
-  return { streamingMessage, isStreaming, error, sendMessage, abort }
+  return {
+    streamingMessage,
+    isStreaming,
+    error,
+    lastUserMessageId,
+    sendMessage,
+    abort,
+  }
 }

@@ -32,22 +32,23 @@ export function ChatView({ chatId, projectId, initialMessages }: Props) {
   const [activeCitations, setActiveCitations] = useState<Citation[] | null>(null)
   const pendingFiredRef = useRef(false)
 
-  const { streamingMessage, isStreaming, error, sendMessage, abort } = useChatStream({
-    chatId,
-    onStreamEnd: (finalMessage) => {
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: finalMessage.id,
-          role: 'assistant',
-          content: finalMessage.content,
-          citations: finalMessage.citations,
-        },
-      ])
-      // 사이드바(제목 자동 갱신, 최근 기록 순서) 서버 컴포넌트 다시 렌더.
-      router.refresh()
-    },
-  })
+  const { streamingMessage, isStreaming, error, lastUserMessageId, sendMessage, abort } =
+    useChatStream({
+      chatId,
+      onStreamEnd: (finalMessage) => {
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: finalMessage.id,
+            role: 'assistant',
+            content: finalMessage.content,
+            citations: finalMessage.citations,
+          },
+        ])
+        // 사이드바(제목 자동 갱신, 최근 기록 순서) 서버 컴포넌트 다시 렌더.
+        router.refresh()
+      },
+    })
 
   const handleSend = useCallback(
     (content: string) => {
@@ -75,8 +76,13 @@ export function ChatView({ chatId, projectId, initialMessages }: Props) {
 
   const handleRetry = useCallback(() => {
     if (!lastUserContent) return
-    sendMessage(lastUserContent)
-  }, [lastUserContent, sendMessage])
+    // T-004: 서버가 이미 user 메시지 DB 레코드를 만들었으면(stream_start 수신 상태)
+    // 그 ID를 재사용하도록 한다. stream_start 전에 HTTP 레벨 실패라면 lastUserMessageId는
+    // null이고, 이 경우 서버는 user 메시지를 새로 만든다 (중복 걱정 없음 — DB 미삽입 상태).
+    sendMessage(lastUserContent, {
+      retryUserMessageId: lastUserMessageId ?? undefined,
+    })
+  }, [lastUserContent, lastUserMessageId, sendMessage])
 
   return (
     <div className="flex h-full">

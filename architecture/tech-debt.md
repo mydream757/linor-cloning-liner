@@ -59,17 +59,6 @@ last_updated: 2026-04-15
 - **상태**: Open
 - **해소 커밋**: —
 
-### T-004: 에러 재시도 시 user 메시지가 DB에 중복 저장
-- **기록일**: 2026-04-21
-- **배경**: 기능 3 Chat의 `/api/chat/[chatId]/messages` POST 핸들러는 요청 초반에 사용자 메시지를 DB에 `create`한다. 스트리밍 도중 LLM 에러가 나면 클라이언트는 인라인 에러 + "다시 시도" 버튼을 띄우는데, 재시도 시 동일 user content로 다시 POST하면 **같은 내용의 user 메시지 레코드가 한 번 더 생성**된다. 브라우저 새로고침 후 사이드바에서 이 Chat을 열면 같은 질문이 두 번 보인다.
-- **왜 지금 부채로 남기나**: 기능 3 D2 코드 리뷰에서 식별. 근본 해결은 (a) 재시도 시 마지막 user 메시지를 재사용하거나 (b) 서버가 "직전 메시지가 동일 user content면 신규 create 생략"을 판단해야 하는데, 둘 다 플로우·영속 전략의 일부 재설계를 요구한다. 발견 빈도가 낮아 (에러 재시도 흐름 + DB 재조회 시) 현 MVP 스코프에 포함시키기보다 명시화.
-- **임시 처치**: 없음. 사용자는 재시도 후 중복 메시지가 남을 수 있음을 감수한다.
-- **해소 조건**: 재시도 전용 흐름 설계 — 클라이언트가 "retry" 플래그와 함께 최근 user 메시지 ID를 보내면 서버가 user 메시지 재생성을 건너뛰고 assistant 응답만 새로 생성. 또는 Q1(영속 전략)을 incremental persist로 전환하면서 user/assistant 레코드 생성 시점을 재정의.
-- **해소 시점**: 기능 3 이후 사용성 피드백 누적 시 또는 Q1 재검토 시점
-- **영향 파일**: `develop/app/api/chat/[chatId]/messages/route.ts`, `develop/lib/chat/use-chat-stream.ts`, `develop/components/chat/chat-view.tsx`
-- **상태**: Open
-- **해소 커밋**: —
-
 ### T-005: ResponseActions 복사·좋아요·싫어요 아이콘 미구현
 - **기록일**: 2026-04-21
 - **배경**: 디자인 명세(`design/features/3-liner.md` §2-2)는 어시스턴트 응답 하단 액션바에 "N개의 출처" 외에 복사 버튼과 좋아요/싫어요 아이콘을 명시한다 — MVP에서는 시각만 제공, 동작은 stub. D5 구현 시 출처 파이프라인에 집중하느라 시각 stub 아이콘은 생략했다.
@@ -90,3 +79,10 @@ last_updated: 2026-04-15
 - **해소일**: 2026-04-21
 - **해소 방식**: 기능 4 Designer Step C에서 `design/references/4-asset/measurements.md` v0.3 실측 기반으로 `color-primary` 재확인 + `color-error` 신규 등록. 당초 해소 시점이던 "기능 4 Developer 단계 진입"보다 앞당겨 Designer 단계에서 해소 — Asset 삭제 UI 실측 때 error 색상도 함께 관찰됐기 때문. `color-primary`(rgb(35,102,56))는 기능 3에서 이미 확정됐고, `color-error`(rgb(219,35,35))는 이 단계에서 확정.
 - **해소 커밋**: `fe1e698`
+
+### T-004: 에러 재시도 시 user 메시지가 DB에 중복 저장
+- **기록일**: 2026-04-21
+- **해소일**: 2026-04-22
+- **해소 방식**: 기능 4 D4-C에서 재시도 플로우 재설계. (a) SSE `stream_start` 이벤트에 `userMessageId` 필드 추가 — 서버가 DB에 확정한 user 메시지 ID를 클라이언트가 추적. (b) `useChatStream`이 `lastUserMessageId` 상태를 노출. (c) `ChatView.handleRetry`가 `sendMessage(content, { retryUserMessageId })`로 호출. (d) Route Handler가 `retryUserMessageId`가 있으면 user 메시지 재생성을 건너뛰고 해당 ID를 재사용 + 해당 user 메시지 이후의 failed assistant 메시지들을 정리 후 새 빈 assistant 메시지로 교체. 결과: 재시도 시 같은 user 메시지가 재사용되어 중복 없음, 이전 실패 시도의 빈/부분 assistant 레코드도 청소됨.
+- **영향 파일**: `develop/app/api/chat/[chatId]/messages/route.ts`, `develop/lib/chat/use-chat-stream.ts`, `develop/lib/chat/sse-types.ts`, `develop/components/chat/chat-view.tsx`
+- **해소 커밋**: (D4-C 커밋 후 해시 기록)

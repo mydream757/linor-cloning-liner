@@ -24,11 +24,19 @@ export async function POST(
 
   // 2. 입력 검증
   const { chatId } = await ctx.params
-  const body = (await request.json()) as { content?: unknown }
+  const body = (await request.json()) as {
+    content?: unknown
+    retryUserMessageId?: unknown
+  }
   const content = typeof body.content === 'string' ? body.content.trim() : ''
   if (!content) {
     return Response.json({ error: '메시지 내용이 비어있습니다' }, { status: 400 })
   }
+  // T-004: 재시도 모드. 기존 user 메시지를 재사용해 DB 중복 생성 방지.
+  const retryUserMessageId =
+    typeof body.retryUserMessageId === 'string' && body.retryUserMessageId.length > 0
+      ? body.retryUserMessageId
+      : null
 
   // 3. Chat 소유권 검증 + 히스토리 로드
   const chat = await prisma.chat.findUnique({
@@ -39,42 +47,83 @@ export async function POST(
     return Response.json({ error: 'Chat을 찾을 수 없습니다' }, { status: 404 })
   }
 
-  // 4. 사용자 메시지 저장 + 어시스턴트 메시지 레코드 (빈 content, 스트림 완료/중단 시 갱신).
-  //    Project 항목의 "+" 버튼으로 생성된 blank Chat("새 대화")은 첫 user 메시지 시 제목 자동 갱신.
-  const isFirstMessage = chat.messages.length === 0
-  const isDefaultTitle = chat.title === '새 대화'
+  // 4a. 재시도 모드: 기존 user 메시지 재사용 + 이후 failed assistant 메시지들 청소.
+  //     일반 모드: user 메시지 새로 생성.
+  let userMessageId: string
+  let historyThroughUser: { role: 'user' | 'assistant' | 'system'; content: string }[]
 
-  await prisma.message.create({
-    data: { chatId, role: 'user', content },
-  })
+  if (retryUserMessageId) {
+    const retryMsg = chat.messages.find((m) => m.id === retryUserMessageId)
+    if (!retryMsg || retryMsg.role !== 'user' || retryMsg.content.trim() !== content) {
+      return Response.json(
+        { error: '재시도 대상 메시지를 찾을 수 없습니다' },
+        { status: 400 },
+      )
+    }
+    userMessageId = retryMsg.id
 
-  if (isFirstMessage && isDefaultTitle) {
-    await prisma.chat.update({
-      where: { id: chatId },
-      data: { title: content.slice(0, 30).trim() || '새 대화' },
+    // 이 user 메시지 이후에 생성된 assistant 메시지들(이전 실패 시도의 잔재)을 제거.
+    // 정상 완료된 응답(content 존재)이 있을 수도 있지만 그 경우 재시도 플로우는 드물다 —
+    // 재시도는 기본적으로 에러 상태에서만 활성화되므로 이전 assistant는 빈/부분 상태.
+    const stale = chat.messages.filter(
+      (m) => m.role === 'assistant' && m.createdAt > retryMsg.createdAt,
+    )
+    if (stale.length > 0) {
+      await prisma.message.deleteMany({
+        where: { id: { in: stale.map((m) => m.id) } },
+      })
+    }
+
+    historyThroughUser = chat.messages
+      .filter((m) => m.role !== 'system' && m.createdAt <= retryMsg.createdAt)
+      .filter((m) => !(m.role === 'assistant' && m.content.trim().length === 0))
+      .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content }))
+  } else {
+    // 새 user 메시지 생성.
+    const isFirstMessage = chat.messages.length === 0
+    const isDefaultTitle = chat.title === '새 대화'
+
+    const userMessage = await prisma.message.create({
+      data: { chatId, role: 'user', content },
     })
+    userMessageId = userMessage.id
+
+    if (isFirstMessage && isDefaultTitle) {
+      await prisma.chat.update({
+        where: { id: chatId },
+        data: { title: content.slice(0, 30).trim() || '새 대화' },
+      })
+    }
+
+    historyThroughUser = [
+      ...chat.messages
+        .filter((m) => m.role !== 'system')
+        .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
+      { role: 'user', content },
+    ]
   }
 
   // 사이드바(Project 트리 + 최근 기록)는 project-scoped layout 캐시를 공유.
   // 제목 자동 갱신이 있었거나, updatedAt이 바뀌어 "최근 기록" 순서가 변해야 하므로 매번 revalidate.
   if (chat.projectId) {
     revalidatePath(`/p/${chat.projectId}`, 'layout')
+  } else {
+    revalidatePath('/', 'layout')
   }
 
+  // 4b. 새 빈 assistant 메시지 레코드 (재시도든 일반 모드든 이 응답은 새 시도)
   const assistantMessage = await prisma.message.create({
     data: { chatId, role: 'assistant', content: '' },
   })
 
-  // 5. LLM API용 메시지 히스토리 구성 (이전 메시지 + 방금 저장한 user 메시지)
-  const apiMessages: LLMMessage[] = [
-    ...chat.messages
-      .filter((m) => m.role !== 'system')
-      .map((m) => ({ role: m.role as 'user' | 'assistant', content: m.content })),
-    { role: 'user', content },
-  ]
+  // 5. LLM API용 메시지 히스토리 — historyThroughUser는 이미 user 메시지까지 포함
+  const apiMessages: LLMMessage[] = historyThroughUser.filter(
+    (m): m is { role: 'user' | 'assistant'; content: string } =>
+      m.role === 'user' || m.role === 'assistant',
+  )
 
   // 6. SSE 스트림 생성
-  const stream = createSSEStream(chatId, assistantMessage.id, apiMessages)
+  const stream = createSSEStream(chatId, userMessageId, assistantMessage.id, apiMessages)
 
   return new Response(stream, {
     headers: {
@@ -94,6 +143,7 @@ function encodeSSE(event: SSEEvent): string {
 // LLM 스트림 → SSE ReadableStream 변환
 function createSSEStream(
   chatId: string,
+  userMessageId: string,
   messageId: string,
   messages: LLMMessage[],
 ): ReadableStream {
@@ -115,7 +165,7 @@ function createSSEStream(
       }
 
       try {
-        safeEnqueue({ type: 'stream_start', chatId, messageId })
+        safeEnqueue({ type: 'stream_start', chatId, messageId, userMessageId })
 
         const provider = getLLMProvider()
         const llmStream = provider.stream(messages, SYSTEM_PROMPT, {
