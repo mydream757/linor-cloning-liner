@@ -28,6 +28,24 @@ export const listUnassignedReferencesByUser = cache(async (userId: string) => {
   })
 })
 
+// Project 스코프 Document 목록. 최신순.
+export const listDocumentsByProject = cache(
+  async (userId: string, projectId: string) => {
+    return prisma.asset.findMany({
+      where: { userId, projectId, type: 'document' },
+      orderBy: { updatedAt: 'desc' },
+    })
+  },
+)
+
+// 미할당 Document 목록 (D4 진입점 대비 선행).
+export const listUnassignedDocumentsByUser = cache(async (userId: string) => {
+  return prisma.asset.findMany({
+    where: { userId, projectId: null, type: 'document' },
+    orderBy: { updatedAt: 'desc' },
+  })
+})
+
 // 단일 Asset 조회 (소유권은 호출부에서 검증).
 export const getAsset = cache(async (assetId: string) => {
   return prisma.asset.findUnique({ where: { id: assetId } })

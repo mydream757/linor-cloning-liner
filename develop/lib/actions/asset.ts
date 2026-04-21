@@ -119,6 +119,137 @@ export async function createReference(
   return { ok: true, data: { id: asset.id } }
 }
 
+// ---------- Document 생성 (빈 Document — 시나리오 5-a) ----------
+
+const createDocumentSchema = z.object({
+  title: titleSchema,
+  projectId: projectIdSchema,
+})
+
+export async function createDocument(
+  data: z.infer<typeof createDocumentSchema>,
+): Promise<ActionResult<{ id: string }>> {
+  const parsed = createDocumentSchema.safeParse(data)
+  if (!parsed.success) {
+    return { ok: false, error: { fields: z.flattenError(parsed.error).fieldErrors } }
+  }
+
+  const { user } = await getRequiredSession()
+
+  // Project 소유권 검증 (projectId가 있을 때만)
+  if (parsed.data.projectId) {
+    const project = await prisma.project.findUnique({ where: { id: parsed.data.projectId } })
+    if (!project || project.userId !== user.id) {
+      return { ok: false, error: { message: '해당 Project를 찾을 수 없습니다' } }
+    }
+  }
+
+  const asset = await prisma.asset.create({
+    data: {
+      userId: user.id,
+      projectId: parsed.data.projectId ?? null,
+      type: 'document',
+      title: parsed.data.title,
+      // 빈 Document. TipTap은 빈 doc이면 editor.getJSON()이 { type: 'doc', content: [] }를
+      // 반환하므로 로드 시 호환 가능.
+      documentContent: { type: 'doc', content: [] },
+    },
+  })
+
+  if (parsed.data.projectId) {
+    revalidatePath(`/p/${parsed.data.projectId}/write`)
+  }
+
+  return { ok: true, data: { id: asset.id } }
+}
+
+// ---------- Chat 응답 포워딩 (시나리오 5-b) ----------
+//
+// 어시스턴트 메시지 1건을 Document Asset으로 내보낸다. 트랜잭션 원자성:
+//   1) Message 조회 + 소유권 검증 (assistant role 강제)
+//   2) Asset 생성 — originChatId 자동 설정, content는 TipTap doc 구조로 감싼 응답 텍스트
+//   3) Message.generatedAssetId 업데이트
+// 셋 중 하나라도 실패 시 전체 롤백.
+
+const forwardMessageToDocumentSchema = z.object({
+  messageId: z.string().min(1),
+  title: titleSchema.optional(),
+})
+
+export async function forwardMessageToDocument(
+  data: z.infer<typeof forwardMessageToDocumentSchema>,
+): Promise<ActionResult<{ id: string; projectId: string | null }>> {
+  const parsed = forwardMessageToDocumentSchema.safeParse(data)
+  if (!parsed.success) {
+    return { ok: false, error: { fields: z.flattenError(parsed.error).fieldErrors } }
+  }
+
+  const { user } = await getRequiredSession()
+
+  // 소유권 + role 검증. Chat을 include해서 userId·projectId 한 번에 확인.
+  const message = await prisma.message.findUnique({
+    where: { id: parsed.data.messageId },
+    include: { chat: true },
+  })
+  if (!message || message.chat.userId !== user.id) {
+    return { ok: false, error: { message: '해당 메시지를 찾을 수 없습니다' } }
+  }
+  if (message.role !== 'assistant') {
+    return { ok: false, error: { message: '어시스턴트 응답만 Document로 내보낼 수 있습니다' } }
+  }
+
+  // 이미 포워딩된 메시지인지 확인 — 중복 방지.
+  if (message.generatedAssetId) {
+    return {
+      ok: false,
+      error: { message: '이 응답은 이미 Document로 내보내졌습니다' },
+    }
+  }
+
+  // 제목: 사용자 제공 > 응답 본문 앞 60자 자동.
+  const title =
+    parsed.data.title && parsed.data.title.length > 0
+      ? parsed.data.title
+      : message.content.slice(0, 60)
+
+  // 응답 본문을 TipTap doc 단일 paragraph로 감싼다. 마크다운 파싱은 기능 5에서 도입.
+  const documentContent = {
+    type: 'doc',
+    content: [
+      {
+        type: 'paragraph',
+        content: [{ type: 'text', text: message.content }],
+      },
+    ],
+  }
+
+  const created = await prisma.$transaction(async (tx) => {
+    const asset = await tx.asset.create({
+      data: {
+        userId: user.id,
+        projectId: message.chat.projectId,
+        type: 'document',
+        title,
+        originChatId: message.chatId,
+        documentContent,
+      },
+    })
+    await tx.message.update({
+      where: { id: message.id },
+      data: { generatedAssetId: asset.id },
+    })
+    return asset
+  })
+
+  if (message.chat.projectId) {
+    revalidatePath(`/p/${message.chat.projectId}/write`)
+    // 출처 패널/Chat 메시지 액션바의 "이미 내보내짐" 상태 갱신을 위해 liner 경로도 revalidate.
+    revalidatePath(`/p/${message.chat.projectId}/liner`, 'layout')
+  }
+
+  return { ok: true, data: { id: created.id, projectId: created.projectId } }
+}
+
 // ---------- Asset 삭제 (Reference/Document 공통) ----------
 
 const deleteAssetSchema = z.object({
