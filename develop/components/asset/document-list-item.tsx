@@ -41,7 +41,7 @@ export function DocumentListItem({ asset, editHref }: Props) {
     minute: '2-digit',
   }).format(asset.updatedAt)
 
-  const isForwarded = Boolean(asset.originChatId)
+  const isForwarded = asset.sourceChatIds.length > 0
 
   return (
     <div className="group flex h-[60px] items-center gap-3 border-b border-border-subtle px-1.5">

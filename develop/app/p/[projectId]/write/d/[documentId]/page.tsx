@@ -36,9 +36,9 @@ export default async function DocumentEditPage({
 
       <header className="flex flex-col gap-1">
         <h1 className="text-heading-2">{asset.title}</h1>
-        {asset.originChatId ? (
+        {asset.sourceChatIds.length > 0 ? (
           <p className="text-caption text-text-secondary">
-            대화에서 생성된 Document
+            {asset.sourceChatIds.length}개의 Chat을 재료로 만든 Document
           </p>
         ) : null}
       </header>

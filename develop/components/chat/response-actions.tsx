@@ -2,33 +2,31 @@
 
 // 어시스턴트 응답 하단 액션바.
 // - "N개의 출처" 버튼 (기능 3)
-// - "Document로 내보내기" 버튼 + 인라인 폼 (기능 4 D3-B, 디자인 §2-9)
-//   · 이미 내보낸 메시지면 "Document 보기 →" 링크로 대체
-//   · 인라인 폼: 제목 편집 + 만들기/취소. 기본값은 응답 앞 60자.
-//   · 성공 시 Write 편집 경로로 router.push.
+// - **"이 Chat을 재료로 새 Document"** 버튼 (기능 4 D3, composition 모델 ADR-0016)
+//   · 시각 강조: bg-bg-badge + color-text-primary (디자인 §2-9)
+//   · 클릭 → 인라인 폼(제목 편집) → createDocument({ sourceChatIds: [chatId] })
+//   · "이미 내보냄" 분기 없음 — 같은 Chat이 여러 Document 재료 가능
+//   · 성공 시 Write 편집 경로로 router.push
 // 복사/좋아요/싫어요 stub 아이콘은 T-005로 별도 부채.
 
-import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useState, useTransition } from 'react'
 
-import { forwardMessageToDocument } from '@/lib/actions/asset'
+import { createDocument } from '@/lib/actions/asset'
 
 interface Props {
-  messageId: string
   messageContent: string
   citationCount: number
   onOpenCitations?: () => void
-  generatedAssetId: string | null
+  chatId: string
   projectId: string | null
 }
 
 export function ResponseActions({
-  messageId,
   messageContent,
   citationCount,
   onOpenCitations,
-  generatedAssetId,
+  chatId,
   projectId,
 }: Props) {
   const router = useRouter()
@@ -36,8 +34,6 @@ export function ResponseActions({
   const [title, setTitle] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [pending, startTransition] = useTransition()
-
-  const alreadyForwarded = Boolean(generatedAssetId)
 
   function openForm() {
     setTitle(messageContent.slice(0, 60))
@@ -54,33 +50,26 @@ export function ResponseActions({
     e.preventDefault()
     setError(null)
     startTransition(async () => {
-      const result = await forwardMessageToDocument({
-        messageId,
-        title: title.trim() || undefined,
+      const result = await createDocument({
+        title: title.trim(),
+        projectId: projectId ?? undefined,
+        sourceChatIds: [chatId],
       })
       if (!result.ok) {
-        setError(result.error.message ?? '저장에 실패했습니다')
+        const fieldErr =
+          result.error.fields?.title?.[0] ?? result.error.fields?.sourceChatIds?.[0]
+        setError(fieldErr ?? result.error.message ?? '저장에 실패했습니다')
         return
       }
-      // Document 편집 페이지로 이동. 미할당(projectId=null)은 D4 이후 지원이므로
-      // 현시점엔 Server Action이 반환한 projectId가 항상 있다고 가정해도 무방.
+      // Write 편집 페이지로 이동. 미할당(projectId=null)은 D4 이후 지원이므로
+      // 현시점에서 Server Action이 반환한 projectId가 항상 있다고 가정해도 무방.
       const docProjectId = result.data.projectId ?? projectId
       if (docProjectId) {
         router.push(`/p/${docProjectId}/write/d/${result.data.id}`)
       } else {
-        // 방어적: 미할당 라우트 미구현 단계에서는 새로고침만.
         router.refresh()
       }
     })
-  }
-
-  // 출처 + 포워딩 모두 없으면 액션바 자체를 숨긴다.
-  if (citationCount === 0 && !alreadyForwarded && !formOpen) {
-    return (
-      <div className="mt-3 flex items-center gap-2">
-        <ForwardButton onClick={openForm} />
-      </div>
-    )
   }
 
   return (
@@ -110,16 +99,24 @@ export function ResponseActions({
           </button>
         ) : null}
 
-        {alreadyForwarded && projectId ? (
-          <Link
-            href={`/p/${projectId}/write/d/${generatedAssetId}`}
-            className="flex h-7 items-center gap-1.5 rounded-md px-2 text-caption text-text-secondary hover:bg-bg-hover hover:text-text-primary"
+        {!formOpen ? (
+          <button
+            type="button"
+            onClick={openForm}
+            className="flex h-8 items-center gap-1.5 rounded-md bg-bg-badge px-3 text-caption font-medium text-text-primary transition-colors hover:bg-bg-hover"
           >
-            Document 보기 →
-          </Link>
-        ) : (
-          !formOpen && <ForwardButton onClick={openForm} />
-        )}
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+              <path
+                d="M3 2.5h6.5L13 6v7.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1Z"
+                stroke="currentColor"
+                strokeWidth="1.2"
+                strokeLinejoin="round"
+              />
+              <path d="M9 2.5V6h3.5" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
+            </svg>
+            이 Chat을 재료로 새 Document
+          </button>
+        ) : null}
       </div>
 
       {formOpen ? (
@@ -163,26 +160,5 @@ export function ResponseActions({
         </form>
       ) : null}
     </div>
-  )
-}
-
-function ForwardButton({ onClick }: { onClick: () => void }) {
-  return (
-    <button
-      type="button"
-      onClick={onClick}
-      className="flex h-7 items-center gap-1.5 rounded-md px-2 text-caption text-text-secondary hover:bg-bg-hover hover:text-text-primary"
-    >
-      <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
-        <path
-          d="M3 2.5h6.5L13 6v7.5a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1V3.5a1 1 0 0 1 1-1Z"
-          stroke="currentColor"
-          strokeWidth="1.2"
-          strokeLinejoin="round"
-        />
-        <path d="M9 2.5V6h3.5" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
-      </svg>
-      Document로 내보내기
-    </button>
   )
 }

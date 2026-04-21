@@ -13,7 +13,9 @@ import { UserBubble } from './user-bubble'
 
 interface Props {
   messages: ClientMessage[]
-  // 포워딩 결과 Write 뷰로 이동할 때 사용. 미할당 Chat(D4 이후)은 null.
+  // 단일 Chat 재료 지름길에서 sourceChatIds=[chatId]로 사용.
+  chatId: string
+  // 생성 후 Write 뷰로 이동할 때 사용. 미할당 Chat(D4 이후)은 null.
   projectId: string | null
   streamingContent?: string | null
   onOpenCitations?: (citations: Citation[]) => void
@@ -21,7 +23,7 @@ interface Props {
 
 const AUTO_SCROLL_THRESHOLD_PX = 80
 
-export function MessageList({ messages, projectId, streamingContent, onOpenCitations }: Props) {
+export function MessageList({ messages, chatId, projectId, streamingContent, onOpenCitations }: Props) {
   const containerRef = useRef<HTMLDivElement>(null)
   const [autoScroll, setAutoScroll] = useState(true)
 
@@ -63,8 +65,8 @@ export function MessageList({ messages, projectId, streamingContent, onOpenCitat
                   messageId={m.id}
                   content={m.content}
                   citations={m.citations}
-                  generatedAssetId={m.generatedAssetId ?? null}
                   projectId={projectId}
+                  chatId={chatId}
                   onOpenCitations={onOpenCitations}
                 />
               )}

@@ -103,10 +103,9 @@ model Chat {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  user             User      @relation(fields: [userId], references: [id], onDelete: Cascade)
-  project          Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  messages         Message[]
-  originatedAssets Asset[]
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project  Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  messages Message[]
 
   @@index([userId])
   @@index([projectId])
@@ -124,16 +123,14 @@ model Message {
   // JSON 배열: [{ index: number, title: string, url?: string, snippet?: string }]
   citations Json?
 
-  // Asset 참조 메타데이터 (기능 4에서 실 Asset 연결 시 활성화).
-  // 현재는 빈 배열 또는 null.
+  // Message가 컨텍스트로 참조한 Asset 목록. 스칼라 배열 FK라 DB 제약은 없고
+  // 애플리케이션 레이어에서 검증/정리(ADR-0014). Asset 삭제 시 array_remove.
   referencedAssetIds String[] @map("referenced_asset_ids")
-  generatedAssetId   String?  @map("generated_asset_id")
 
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt @map("updated_at")
 
-  chat           Chat   @relation(fields: [chatId], references: [id], onDelete: Cascade)
-  generatedAsset Asset? @relation(fields: [generatedAssetId], references: [id], onDelete: SetNull)
+  chat Chat @relation(fields: [chatId], references: [id], onDelete: Cascade)
 
   @@index([chatId])
   @@map("messages")
@@ -149,17 +146,23 @@ enum MessageRole {
 
 // Asset — Document 또는 Reference. polymorphic.
 // ADR-0014: 단일 테이블 + type discriminator + 개별 nullable 컬럼 하이브리드.
-// - 공통 필드: id, userId, projectId?, type, title, originChatId?, createdAt, updatedAt
+// ADR-0016: Asset-Chat 관계는 Document 중심 composition — Asset.source_chat_ids[].
+// - 공통 필드: id, userId, projectId?, type, title, sourceChatIds[], createdAt, updatedAt
 // - type='reference'일 때만 referenceKind/referenceUrl/referenceText 채움
 // - type='document'일 때만 documentContent 채움
 // 타입별 제약은 애플리케이션 레이어(zod discriminatedUnion, 타입 가드)에서 강제한다.
 model Asset {
-  id           String    @id @default(cuid())
-  userId       String    @map("user_id")
-  projectId    String?   @map("project_id")
-  type         AssetType
-  title        String    @db.VarChar(200)
-  originChatId String?   @map("origin_chat_id")
+  id        String    @id @default(cuid())
+  userId    String    @map("user_id")
+  projectId String?   @map("project_id")
+  type      AssetType
+  title     String    @db.VarChar(200)
+
+  // Composition 메타데이터. Document는 0~N개 Chat을 재료로 안을 수 있다 (ADR-0016).
+  // 스칼라 배열 FK라 DB 제약은 없고 애플리케이션 레이어에서 검증/정리.
+  // Chat 삭제 시 해당 ID만 array_remove (Asset은 생존).
+  // Reference에서는 보통 빈 배열. Chat 대화 중 저장된 Reference에만 해당 Chat ID가 들어감.
+  sourceChatIds String[] @map("source_chat_ids")
 
   // Reference 전용 (type='reference'일 때만)
   referenceKind ReferenceKind? @map("reference_kind")
@@ -172,16 +175,11 @@ model Asset {
   createdAt DateTime @default(now()) @map("created_at")
   updatedAt DateTime @updatedAt      @map("updated_at")
 
-  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
-  project    Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  originChat Chat?    @relation(fields: [originChatId], references: [id], onDelete: SetNull)
-
-  // Message.generatedAssetId 역참조.
-  generatingMessages Message[]
+  user    User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
   @@index([userId])
   @@index([projectId])
-  @@index([originChatId])
   @@index([userId, type])
   @@map("assets")
 }

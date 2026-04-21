@@ -11,6 +11,7 @@ import { DocumentList } from '@/components/asset/document-list'
 import { getRequiredSession } from '@/lib/auth-session'
 import { getProject } from '@/lib/queries/project'
 import { listDocumentsByProject } from '@/lib/queries/asset'
+import { listChatsByProject } from '@/lib/queries/chat'
 
 export default async function WritePage({
   params,
@@ -26,7 +27,10 @@ export default async function WritePage({
     notFound()
   }
 
-  const documents = await listDocumentsByProject(user.id, projectId)
+  const [documents, chats] = await Promise.all([
+    listDocumentsByProject(user.id, projectId),
+    listChatsByProject(projectId),
+  ])
 
   return (
     <section className="mx-auto flex w-full max-w-[720px] flex-col gap-6 px-6 py-8">
@@ -37,7 +41,7 @@ export default async function WritePage({
             {project.name} · {documents.length}개의 문서
           </p>
         </div>
-        <DocumentCreateModal projectId={projectId} />
+        <DocumentCreateModal projectId={projectId} chats={chats} />
       </header>
 
       <DocumentList

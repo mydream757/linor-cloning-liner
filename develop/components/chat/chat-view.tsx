@@ -83,6 +83,7 @@ export function ChatView({ chatId, projectId, initialMessages }: Props) {
       <div className="flex min-w-0 flex-1 flex-col">
         <MessageList
           messages={messages}
+          chatId={chatId}
           projectId={projectId}
           streamingContent={streamingMessage?.content ?? null}
           onOpenCitations={(citations) => setActiveCitations(citations)}

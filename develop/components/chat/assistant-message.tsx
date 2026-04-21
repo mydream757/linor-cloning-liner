@@ -12,13 +12,13 @@ import { CitationBadge } from './citation-badge'
 import { ResponseActions } from './response-actions'
 
 interface Props {
-  // 영속된 메시지의 ID. 스트리밍 중 또는 tmp 메시지는 undefined → 포워딩 불가.
+  // 영속된 메시지의 ID. 스트리밍 중 또는 tmp 메시지는 undefined → 지름길 불가.
   messageId?: string
   content: string
   citations?: Citation[]
-  // 이 메시지가 이미 Document로 내보내졌으면 해당 Asset ID. null이면 아직 안 됨.
-  generatedAssetId?: string | null
-  // 포워딩 후 Write 뷰로 이동할 때 사용.
+  // 단일 Chat 재료 지름길에서 sourceChatIds=[chatId]로 사용.
+  chatId?: string
+  // 생성 후 Write 뷰로 이동할 때 사용.
   projectId?: string | null
   onOpenCitations?: (citations: Citation[]) => void
 }
@@ -27,7 +27,7 @@ export function AssistantMessage({
   messageId,
   content,
   citations,
-  generatedAssetId = null,
+  chatId,
   projectId = null,
   onOpenCitations,
 }: Props) {
@@ -81,9 +81,8 @@ export function AssistantMessage({
       >
         {content}
       </ReactMarkdown>
-      {messageId ? (
+      {messageId && chatId ? (
         <ResponseActions
-          messageId={messageId}
           messageContent={content}
           citationCount={citations?.length ?? 0}
           onOpenCitations={
@@ -91,7 +90,7 @@ export function AssistantMessage({
               ? () => onOpenCitations(citations)
               : undefined
           }
-          generatedAssetId={generatedAssetId}
+          chatId={chatId}
           projectId={projectId}
         />
       ) : null}

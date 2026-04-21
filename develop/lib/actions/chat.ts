@@ -86,7 +86,9 @@ export async function renameChat(
   return { ok: true, data: { id: parsed.data.id } }
 }
 
-// Chat 삭제. Messages cascade, 연관 Asset의 origin_chat_id는 null 처리 (기능 4에서 Asset 모델 추가 시).
+// Chat 삭제. Messages cascade.
+// 도메인 모델 v0.4 (ADR-0016): 이 Chat을 재료로 삼던 Asset의 source_chat_ids 배열에서
+// 해당 ID를 array_remove. Asset(Document)은 생존, 콘텐츠는 건드리지 않는다.
 // deleteCurrent flag가 있으면 현재 보고 있는 Chat을 삭제 중이라는 의미 — 같은 Project의
 // 다른 Chat으로 이동하거나 없으면 /liner(빈 상태)로 redirect한다.
 const deleteChatSchema = z.object({
@@ -113,7 +115,15 @@ export async function deleteChat(
   }
 
   // Messages는 onDelete: Cascade로 자동 삭제.
-  await prisma.chat.delete({ where: { id: parsed.data.id } })
+  // Asset.source_chat_ids 배열 정리와 Chat 삭제를 원자 트랜잭션으로 묶는다.
+  await prisma.$transaction(async (tx) => {
+    await tx.$executeRaw`
+      UPDATE assets
+      SET source_chat_ids = array_remove(source_chat_ids, ${parsed.data.id})
+      WHERE ${parsed.data.id} = ANY(source_chat_ids)
+    `
+    await tx.chat.delete({ where: { id: parsed.data.id } })
+  })
 
   if (existing.projectId) {
     revalidatePath(`/p/${existing.projectId}`, 'layout')
