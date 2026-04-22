@@ -6,6 +6,7 @@
 // - 스트리밍 종료 시 어시스턴트 메시지를 local state에 append
 // - 빈 상태에서 넘어온 직후 sessionStorage의 pending 메시지가 있으면 한 번 자동 발사
 
+import type { Asset } from '@prisma/client'
 import { useRouter } from 'next/navigation'
 import { useCallback, useEffect, useRef, useState } from 'react'
 
@@ -23,9 +24,11 @@ interface Props {
   // 포워딩 후 Write 뷰로 이동할 때 사용. 미할당 Chat은 D4에서 지원.
   projectId: string | null
   initialMessages: ClientMessage[]
+  // D6: Reference 첨부 대상. 현재 Chat scope(Project or 미할당)의 Reference Asset들.
+  references: Asset[]
 }
 
-export function ChatView({ chatId, projectId, initialMessages }: Props) {
+export function ChatView({ chatId, projectId, initialMessages, references }: Props) {
   const router = useRouter()
   const [messages, setMessages] = useState<ClientMessage[]>(initialMessages)
   const [lastUserContent, setLastUserContent] = useState<string | null>(null)
@@ -51,13 +54,13 @@ export function ChatView({ chatId, projectId, initialMessages }: Props) {
     })
 
   const handleSend = useCallback(
-    (content: string) => {
+    (content: string, options?: { referenceAssetIds?: string[] }) => {
       setMessages((prev) => [
         ...prev,
         { id: `tmp:${Date.now()}`, role: 'user', content },
       ])
       setLastUserContent(content)
-      sendMessage(content)
+      sendMessage(content, { referenceAssetIds: options?.referenceAssetIds })
     },
     [sendMessage],
   )
@@ -109,6 +112,7 @@ export function ChatView({ chatId, projectId, initialMessages }: Props) {
             onStop={abort}
             isStreaming={isStreaming}
             autoFocus
+            references={references}
           />
         </div>
       </div>

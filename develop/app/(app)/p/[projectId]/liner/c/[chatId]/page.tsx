@@ -7,6 +7,7 @@ import { ChatView } from '@/components/chat/chat-view'
 import { getRequiredSession } from '@/lib/auth-session'
 import type { ClientMessage } from '@/lib/chat/message-types'
 import type { Citation } from '@/lib/chat/sse-types'
+import { listReferencesByProject } from '@/lib/queries/asset'
 import { getChatWithMessages } from '@/lib/queries/chat'
 
 export default async function ChatPage({
@@ -22,6 +23,8 @@ export default async function ChatPage({
     notFound()
   }
 
+  const references = await listReferencesByProject(user.id, projectId)
+
   const initialMessages: ClientMessage[] = chat.messages
     .filter((m) => m.role !== 'system')
     .map((m) => ({
@@ -31,5 +34,12 @@ export default async function ChatPage({
       citations: m.citations ? (m.citations as unknown as Citation[]) : undefined,
     }))
 
-  return <ChatView chatId={chatId} projectId={projectId} initialMessages={initialMessages} />
+  return (
+    <ChatView
+      chatId={chatId}
+      projectId={projectId}
+      initialMessages={initialMessages}
+      references={references}
+    />
+  )
 }

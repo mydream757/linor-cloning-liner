@@ -27,6 +27,7 @@ export async function POST(
   const body = (await request.json()) as {
     content?: unknown
     retryUserMessageId?: unknown
+    referenceAssetIds?: unknown
   }
   const content = typeof body.content === 'string' ? body.content.trim() : ''
   if (!content) {
@@ -37,6 +38,11 @@ export async function POST(
     typeof body.retryUserMessageId === 'string' && body.retryUserMessageId.length > 0
       ? body.retryUserMessageId
       : null
+  // D6: Reference 첨부. user 메시지에 referencedAssetIds로 기록.
+  //     D6-B에서 시스템 프롬프트 주입 + parseCitations 실 데이터화 추가 예정.
+  const referenceAssetIds = Array.isArray(body.referenceAssetIds)
+    ? (body.referenceAssetIds.filter((v): v is string => typeof v === 'string' && v.length > 0))
+    : []
 
   // 3. Chat 소유권 검증 + 히스토리 로드
   const chat = await prisma.chat.findUnique({
@@ -45,6 +51,20 @@ export async function POST(
   })
   if (!chat || chat.userId !== userId) {
     return Response.json({ error: 'Chat을 찾을 수 없습니다' }, { status: 404 })
+  }
+
+  // 3b. D6: Reference 검증 (user 소유 + type='reference'). 누락·불일치면 거부.
+  if (referenceAssetIds.length > 0) {
+    const refs = await prisma.asset.findMany({
+      where: { id: { in: referenceAssetIds }, userId, type: 'reference' },
+      select: { id: true },
+    })
+    if (refs.length !== referenceAssetIds.length) {
+      return Response.json(
+        { error: '선택한 Reference 중 일부를 찾을 수 없습니다' },
+        { status: 400 },
+      )
+    }
   }
 
   // 4a. 재시도 모드: 기존 user 메시지 재사용 + 이후 failed assistant 메시지들 청소.
@@ -84,7 +104,13 @@ export async function POST(
     const isDefaultTitle = chat.title === '새 대화'
 
     const userMessage = await prisma.message.create({
-      data: { chatId, role: 'user', content },
+      data: {
+        chatId,
+        role: 'user',
+        content,
+        // D6: 선택된 Reference ID를 순서 그대로 기록. 빈 배열이면 주입 없음.
+        referencedAssetIds: referenceAssetIds,
+      },
     })
     userMessageId = userMessage.id
 

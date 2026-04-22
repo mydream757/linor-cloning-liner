@@ -21,6 +21,8 @@ interface UseChatStreamOptions {
 interface SendMessageOptions {
   /** T-004 재시도 모드. 기존 user 메시지 ID를 재사용해 DB 중복 생성 방지. */
   retryUserMessageId?: string
+  /** D6: 이 메시지가 참조하는 Reference Asset ID 배열. 번호 순서대로 [n] 인용과 매핑. */
+  referenceAssetIds?: string[]
 }
 
 interface UseChatStreamReturn {
@@ -68,6 +70,7 @@ export function useChatStream({ chatId, onStreamEnd }: UseChatStreamOptions): Us
         body: JSON.stringify({
           content,
           retryUserMessageId: options?.retryUserMessageId,
+          referenceAssetIds: options?.referenceAssetIds,
         }),
         signal: abortController.signal,
       })
