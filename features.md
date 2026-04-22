@@ -4,6 +4,19 @@
 
 모든 기능은 [`architecture/domain-model.md`](architecture/domain-model.md)의 도메인 모델(Project / Chat / Asset) 위에서 정의된다.
 
+## 현재 진행 상황 (빠른 핸드오프용)
+
+**기능 4 구현 중** — D6까지 완료(커밋 `adff47b`). D7(종합 검증 + 사이드바 Reference 진입점 추가 + features.md 상태 갱신) 남음.
+
+**다음 세션 시작 시 읽을 문서 순서**:
+1. 이 파일 §1차 MVP 기능 §4 (D-stage 진행 + D7 남은 작업)
+2. [`plan/features/4-asset.md`](plan/features/4-asset.md) v0.6 — 특히 §5 결정 요약(최근 추가 2건)·§7 열린 질문(해소 상태)·§8 D7 체크리스트
+3. [`architecture/domain-model.md`](architecture/domain-model.md) v0.4 + [ADR-0014](architecture/decisions/0014-asset-schema-polymorphic-single-table.md)·[ADR-0015](architecture/decisions/0015-unassigned-route-structure.md)·[ADR-0016](architecture/decisions/0016-asset-chat-composition-model.md)
+4. [`design/features/4-asset.md`](design/features/4-asset.md) v0.3 — §2-9·§2-11 최근 변경
+5. 기술 부채: [T-001·T-004 Resolved](architecture/tech-debt.md#resolved), T-005 Open
+
+**컴팩트 후 권장 첫 액션**: 위 문서들을 병렬로 훑은 뒤 D7 체크리스트(사이드바 Reference 진입점 → 브라우저 검증 → features.md 갱신) 순으로 진행. 구현 전 사용자 승인 받는 루틴은 유지.
+
 ## 상태 표기
 
 - **후보**: MVP 후보로 식별된 상태 (기획 착수 전)
@@ -62,17 +75,34 @@
 - 기획: [plan/features/3-liner.md](plan/features/3-liner.md) (v0.5)
 - 디자인: [design/features/3-liner.md](design/features/3-liner.md) (v0.2)
 - 관련 ADR: [0013](architecture/decisions/0013-llm-provider-abstraction.md)
-- 남은 기술 부채: [T-004](architecture/tech-debt.md#t-004) (에러 재시도 시 user 메시지 DB 중복), [T-005](architecture/tech-debt.md#t-005) (ResponseActions stub 아이콘 미구현)
+- 남은 기술 부채: [T-005](architecture/tech-debt.md#t-005) (ResponseActions stub 아이콘 미구현). T-004는 기능 4 D4-C에서 해소됨.
 
 ### 4. Asset 관리 (Reference + Document) + 미할당 Chat
-- **상태**: 후보
+- **상태**: 구현 중 — **D1~D6 완료, D7(종합 검증 + 사이드바 통합) 남음**
 - **관련 엔티티**: Asset, Chat
-- **설명**: Reference 저장(URL, 텍스트 스니펫), Document 생성·목록·삭제. Project 할당·미할당 상태 모두 지원 (Asset + Chat 공통). **파일 업로드/파싱(PDF·DOCX·HWP)은 1차 제외** — 복잡도 대비 학습 가치 낮음. 미할당 지원을 위해 top-level 라우트(`/liner`, `/liner/c/[chatId]` 등)와 projectId-less 레이아웃을 함께 도입 — 기능 3 D4에서 연기된 "프로젝트 종속 없는 대화" 요구도 여기에서 해소.
+- **설명**: Reference 저장(URL, 텍스트 스니펫), Document 생성·목록·삭제 (Composition 모델 기반, 0/1/N개 Chat을 재료로). Project 할당·미할당 상태 모두 지원. 미할당 top-level 라우트(`/liner`, `/write`) 도입, 사이드바 전역 "+ 새 대화" 복귀, Chat ↔ Project 이동 + 유일-재료 Asset 동반. Reference 선택 칩 UI + 시스템 프롬프트 주입 + 출처 배지 실 데이터. T-001·T-004 해소. **파일 업로드/파싱은 1차 제외**.
+- 기획: [plan/features/4-asset.md](plan/features/4-asset.md) (v0.6)
+- 디자인: [design/features/4-asset.md](design/features/4-asset.md) (v0.3)
+- 디자인 레퍼런스: [design/references/4-asset/](design/references/4-asset/) (v0.3)
+- 관련 ADR: [0014](architecture/decisions/0014-asset-schema-polymorphic-single-table.md) (Asset 스키마), [0015](architecture/decisions/0015-unassigned-route-structure.md) (미할당 라우트), [0016](architecture/decisions/0016-asset-chat-composition-model.md) (Composition 모델)
+- D-stage 진행:
+  - D1 Prisma 스키마 확장 (Asset 모델): `296db72`
+  - D2 Reference CRUD + 임시 검증 페이지: `c1086f6`
+  - D3-A Document CRUD + 포워딩 Server Action + Write 뷰 목록: `4737d20`
+  - D3-B Chat 응답 포워딩 UI + 사이드바 뷰별 전환: `359c860`
+  - Composition 모델 전환 (도메인 모델 v0.4 + ADR-0016 + PM v0.4 + 스키마 마이그레이션 + 구현 전면 재작성): docs `66d9a85`, impl `bd5a08d`
+  - D4-A 미할당 라우트 + `(app)` Route Group 공통 layout hoist: `768c5a8`
+  - D4-B 사이드바 전역 "+ 새 대화" 버튼: `e8b27f7`
+  - D4-C T-004 해소 (재시도 시 user 메시지 중복 저장 방지): `eb9b784` (해시 기록 `2cb57a8`)
+  - D5 Chat ↔ Project 이동 + 유일-재료 Asset 동반 (PM v0.5 + Design v0.3): `677d182`
+  - D6-A Reference 선택 UI + referencedAssetIds 저장: `68869ce`
+  - D6-B Reference 시스템 프롬프트 주입 + Citation 실 데이터: `adff47b`
+- D7 남은 작업: **사이드바에 Reference 진입점 추가** (Project "자료" 링크 + 미할당 `/references` 페이지 + 빈 상태 CTA), 브라우저 수동 검증 (3 시나리오 + 미할당 + 재시도), 타입체크·린트, tech-debt Resolved 상태 확인, `features.md` 상태 "완료"로 갱신
 
 ### 5. Write 뷰: Document Asset 편집 (TipTap) + AI 수정 제안 Before/After 비교
 - **상태**: 후보
 - **관련 엔티티**: Asset(Document)
-- **설명**: Document Asset을 TipTap으로 편집. 선택 영역을 AI에 보내 수정안 수신, 취소선/하이라이트 diff로 제안 표시, 사용자가 선택적으로 적용. **인용 찾기는 1차 제외**.
+- **설명**: Document Asset을 TipTap으로 편집. 선택 영역을 AI에 보내 수정안 수신, 취소선/하이라이트 diff로 제안 표시, 사용자가 선택적으로 적용. **인용 찾기는 1차 제외**. **Reference 첨부 UI가 이 기능에서 1급 편입 예정** — Write 뷰의 AI 호출(선택 영역 → 수정 제안) 요청 폼에 Reference 선택을 포함 (기능 4에서는 Liner 뷰 전용, 기능 5 범위로 이관 결정 — PM v0.6 §5 참조).
 
 ### 6. Scholar 뷰: 3패널 워크스페이스
 - **상태**: 후보
@@ -85,8 +115,7 @@
 
 - 파일 업로드/파싱 (PDF / DOCX / HWP)
 - 인용 찾기 (Write 본문 선택 → Liner 검색으로 근거 탐색)
-- Chat을 Project로 할당할 때 "이 Chat이 만든 Asset도 함께 이동" 옵션 UI
-- Document에서 Reference를 `@` 멘션으로 인용 삽입
+- Document에서 Reference를 `@` 멘션으로 인용 삽입 (기능 5 Write Reference 첨부 UI가 도입된 이후)
 - Scholar 뷰의 Chat 패널이 현재 편집 중 Document를 자동 컨텍스트로 포함
 - **Zustand 부분 마이그레이션 + 성능 비교** (상태 관리 학습 프로세스 2단계)
 
