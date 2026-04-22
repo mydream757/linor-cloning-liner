@@ -1,8 +1,9 @@
 'use client'
 
-// 우측 슬라이드-인 출처 패널 (399px). stub 데이터 기준.
+// 우측 슬라이드-인 출처 패널 (399px).
 // 디자인: design/features/3-liner.md §2-5.
-// 탭(전체/웹문서/논문/컬렉션) 중 "전체"만 동작 — 필터링은 기능 4 실데이터 연결 시.
+// 기능 4 D6-B에서 실 Reference 데이터 연결 — title/url/snippet은 서버가 Asset에서 채운다.
+// 탭(전체/웹문서/논문/컬렉션) 중 "전체"만 동작 — 필터링은 2차 후보.
 
 import type { Citation } from '@/lib/chat/sse-types'
 

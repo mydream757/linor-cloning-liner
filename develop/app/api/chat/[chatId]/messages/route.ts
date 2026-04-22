@@ -142,6 +142,16 @@ export async function POST(
     data: { chatId, role: 'assistant', content: '' },
   })
 
+  // 4c. D6-B: 이 응답이 참조할 Reference 풀 데이터 로드.
+  //     일반 모드 → 방금 저장한 referenceAssetIds. 재시도 모드 → 기존 user 메시지의 referencedAssetIds.
+  const effectiveReferenceIds = retryUserMessageId
+    ? (chat.messages.find((m) => m.id === retryUserMessageId)?.referencedAssetIds ?? [])
+    : referenceAssetIds
+
+  const referenceRefs = effectiveReferenceIds.length > 0
+    ? await loadReferencesOrdered(userId, effectiveReferenceIds)
+    : []
+
   // 5. LLM API용 메시지 히스토리 — historyThroughUser는 이미 user 메시지까지 포함
   const apiMessages: LLMMessage[] = historyThroughUser.filter(
     (m): m is { role: 'user' | 'assistant'; content: string } =>
@@ -149,7 +159,15 @@ export async function POST(
   )
 
   // 6. SSE 스트림 생성
-  const stream = createSSEStream(chatId, userMessageId, assistantMessage.id, apiMessages)
+  const systemPrompt = buildSystemPrompt(referenceRefs)
+  const stream = createSSEStream(
+    chatId,
+    userMessageId,
+    assistantMessage.id,
+    apiMessages,
+    systemPrompt,
+    referenceRefs,
+  )
 
   return new Response(stream, {
     headers: {
@@ -166,12 +184,44 @@ function encodeSSE(event: SSEEvent): string {
   return `data: ${JSON.stringify(event)}\n\n`
 }
 
+// Reference 미니 타입 — 프롬프트 주입 + parseCitations에서 쓰는 필드만 select.
+type ReferenceRef = {
+  id: string
+  title: string
+  referenceKind: 'url' | 'text' | null
+  referenceUrl: string | null
+  referenceText: string | null
+}
+
+// user가 선택한 Reference들을 ID 순서대로 로드. 소유권 + type은 상위에서 이미 검증됨.
+async function loadReferencesOrdered(
+  userId: string,
+  ids: string[],
+): Promise<ReferenceRef[]> {
+  const rows = await prisma.asset.findMany({
+    where: { id: { in: ids }, userId, type: 'reference' },
+    select: {
+      id: true,
+      title: true,
+      referenceKind: true,
+      referenceUrl: true,
+      referenceText: true,
+    },
+  })
+  const byId = new Map(rows.map((r) => [r.id, r]))
+  return ids
+    .map((id) => byId.get(id))
+    .filter((r): r is ReferenceRef => Boolean(r))
+}
+
 // LLM 스트림 → SSE ReadableStream 변환
 function createSSEStream(
   chatId: string,
   userMessageId: string,
   messageId: string,
   messages: LLMMessage[],
+  systemPrompt: string,
+  references: ReferenceRef[],
 ): ReadableStream {
   const encoder = new TextEncoder()
   // 클라이언트 중단(ReadableStream.cancel)을 LLM SDK 호출까지 전파하기 위한
@@ -194,7 +244,7 @@ function createSSEStream(
         safeEnqueue({ type: 'stream_start', chatId, messageId, userMessageId })
 
         const provider = getLLMProvider()
-        const llmStream = provider.stream(messages, SYSTEM_PROMPT, {
+        const llmStream = provider.stream(messages, systemPrompt, {
           signal: abortController.signal,
         })
 
@@ -208,10 +258,10 @@ function createSSEStream(
 
         if (abortController.signal.aborted) {
           // 클라이언트 중단: 받은 만큼 저장(없으면 빈 레코드 정리). stream_end는 보내지 않음.
-          await persistPartialOrCleanup(messageId, fullContent)
+          await persistPartialOrCleanup(messageId, fullContent, references)
         } else {
           // 정상 완료: 전체 저장 + stream_end
-          const citations = parseCitations(fullContent)
+          const citations = parseCitations(fullContent, references)
           await prisma.message.update({
             where: { id: messageId },
             data: {
@@ -229,7 +279,7 @@ function createSSEStream(
         }
       } catch (err) {
         // 에러 경로: 부분 수신분은 저장, 빈 레코드면 삭제. 중단으로 인한 AbortError도 여기로 올 수 있다.
-        await persistPartialOrCleanup(messageId, fullContent)
+        await persistPartialOrCleanup(messageId, fullContent, references)
 
         if (!abortController.signal.aborted) {
           safeEnqueue({
@@ -256,10 +306,14 @@ function createSSEStream(
 
 // 부분 수신분이 있으면 저장, 없으면 빈 assistant 레코드 삭제.
 // 에러·중단 경로에서 공통으로 호출된다 (Blocker 3 대응).
-async function persistPartialOrCleanup(messageId: string, partial: string) {
+async function persistPartialOrCleanup(
+  messageId: string,
+  partial: string,
+  references: ReferenceRef[],
+) {
   try {
     if (partial.length > 0) {
-      const citations = parseCitations(partial)
+      const citations = parseCitations(partial, references)
       await prisma.message.update({
         where: { id: messageId },
         data: {
@@ -276,24 +330,75 @@ async function persistPartialOrCleanup(messageId: string, partial: string) {
   }
 }
 
-// 응답 본문에서 [n] 패턴을 파싱하여 Citation 배열 생성.
-// 기능 3에서는 stub — 실제 Reference 데이터 연결은 기능 4.
-function parseCitations(content: string): Citation[] {
+// 응답 본문에서 [n] 패턴을 파싱하고, references[n-1]로 실 Asset 데이터를 매핑해 Citation 생성.
+// 기능 4 D6-B: stub 제거. 참조 없으면 빈 배열 반환 — [n] 마커가 본문에 있어도 매핑 대상 없으면
+// citation을 만들지 않는다 (LLM이 근거 없이 [n]을 넣은 경우 방어).
+function parseCitations(content: string, references: ReferenceRef[]): Citation[] {
+  if (references.length === 0) return []
+
   const pattern = /\[(\d+)\]/g
-  const indices = new Set<number>()
+  const usedIndices = new Set<number>()
   let match
 
   while ((match = pattern.exec(content)) !== null) {
-    indices.add(parseInt(match[1], 10))
+    usedIndices.add(parseInt(match[1], 10))
   }
 
-  return Array.from(indices)
+  return Array.from(usedIndices)
     .sort((a, b) => a - b)
-    .map((index) => ({
-      index,
-      title: `출처 ${index}`,
-      snippet: `출처 ${index}에 대한 stub 정보입니다.`,
-    }))
+    .flatMap((index): Citation[] => {
+      const ref = references[index - 1] // [1] → references[0]
+      if (!ref) return []
+      // referenceKind별 url/snippet 매핑
+      // - url kind: url=referenceUrl, snippet=referenceText(발췌 as snippet)
+      // - text kind: url=undefined, snippet=referenceText(본문)
+      return [
+        {
+          index,
+          title: ref.title,
+          url: ref.referenceUrl ?? undefined,
+          snippet: ref.referenceText ?? undefined,
+        },
+      ]
+    })
+}
+
+// 시스템 프롬프트 — 출처 배지 지시 + (있을 경우) Reference 내용 주입.
+// 기본 규칙(출처 번호 표기 등)은 기능 3에서 확립. D6-B에서 Reference 섹션 동적 추가.
+function buildSystemPrompt(references: ReferenceRef[]): string {
+  const base = `당신은 리노(Linor)라는 AI 리서치 어시스턴트입니다.
+사용자의 질문에 정확하고 유용한 답변을 제공합니다.
+
+답변 시 다음 규칙을 따르세요:
+- 명확하고 구조화된 답변을 작성합니다.
+- 적절한 경우 제목(##)과 목록을 사용합니다.
+- 한국어로 답변합니다.`
+
+  if (references.length === 0) {
+    return `${base}
+- 주장이나 사실에 대해 출처가 있다면 [1], [2] 형식으로 인라인 출처 번호를 표기합니다.`
+  }
+
+  const refSection = references
+    .map((ref, idx) => {
+      const n = idx + 1
+      if (ref.referenceKind === 'url') {
+        const url = ref.referenceUrl ?? ''
+        const excerpt = ref.referenceText ?? ''
+        return `[${n}] 제목: ${ref.title}\n    URL: ${url}${excerpt ? `\n    발췌: ${excerpt}` : ''}`
+      }
+      // text kind
+      return `[${n}] 제목: ${ref.title}\n    내용: ${ref.referenceText ?? ''}`
+    })
+    .join('\n\n')
+
+  return `${base}
+- 아래 "제공된 자료"를 참고해 답변하고, **해당 자료를 근거로 사용한 문장 끝에는 [1], [2] 같이 자료 번호를 표기**하세요.
+- 제공된 자료에 없는 내용은 일반 지식으로 답변하고 [n] 번호를 붙이지 마세요.
+
+## 제공된 자료
+
+${refSection}`
 }
 
 function isRetryableError(err: unknown): boolean {
@@ -323,13 +428,3 @@ function classifyError(err: unknown): string {
   return `오류가 발생했습니다: ${err.message}`
 }
 
-// 시스템 프롬프트 — 출처 배지 지시 포함.
-// 기능 3에서는 stub Reference 기반. 기능 4에서 실제 Reference 주입 시 확장.
-const SYSTEM_PROMPT = `당신은 리노(Linor)라는 AI 리서치 어시스턴트입니다.
-사용자의 질문에 정확하고 유용한 답변을 제공합니다.
-
-답변 시 다음 규칙을 따르세요:
-- 명확하고 구조화된 답변을 작성합니다.
-- 적절한 경우 제목(##)과 목록을 사용합니다.
-- 주장이나 사실에 대해 출처가 있다면 [1], [2] 형식으로 인라인 출처 번호를 표기합니다.
-- 한국어로 답변합니다.`
