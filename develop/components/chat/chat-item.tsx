@@ -15,6 +15,8 @@ import { useActionState, useEffect, useRef } from 'react'
 import { deleteChat, renameChat } from '@/lib/actions/chat'
 import type { ActionResult } from '@/lib/actions/types'
 
+import { ChatMoveDialog } from './chat-move-dialog'
+
 type Props = {
   chat: Chat
   isActive: boolean
@@ -51,6 +53,7 @@ function DisplayMode({
   onStartEdit: () => void
 }) {
   const dialogRef = useRef<HTMLDialogElement | null>(null)
+  const moveDialogRef = useRef<HTMLDialogElement | null>(null)
 
   return (
     <div
@@ -95,6 +98,14 @@ function DisplayMode({
             </DropdownMenu.Item>
             <DropdownMenu.Item
               onSelect={() => {
+                setTimeout(() => moveDialogRef.current?.showModal(), 0)
+              }}
+              className="flex h-7 cursor-default items-center rounded px-2 outline-none data-highlighted:bg-bg-hover"
+            >
+              Project로 이동
+            </DropdownMenu.Item>
+            <DropdownMenu.Item
+              onSelect={() => {
                 // ProjectItem과 동일한 타이밍 조정 — Radix close · focus 복귀 뒤 dialog 오픈.
                 setTimeout(() => dialogRef.current?.showModal(), 0)
               }}
@@ -107,6 +118,7 @@ function DisplayMode({
       </DropdownMenu.Root>
 
       <DeleteDialog chat={chat} isActive={isActive} dialogRef={dialogRef} />
+      <ChatMoveDialog chat={chat} dialogRef={moveDialogRef} />
     </div>
   )
 }

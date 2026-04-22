@@ -1,7 +1,7 @@
 ---
 feature: Asset 관리 (Reference + Document) + 미할당 Chat
-version: 0.2
-last_updated: 2026-04-21
+version: 0.3
+last_updated: 2026-04-22
 ---
 
 # Asset 관리 (Reference + Document) + 미할당 Chat — 화면 설계
@@ -61,7 +61,7 @@ last_updated: 2026-04-21
     └─→ 이동 다이얼로그
             ├─→ Project 선택 목록 → 확인
             │       └─→ URL 리다이렉트: /liner/c/[id] → /p/[pid]/liner/c/[id]
-            └─→ "이 Chat이 만든 Asset도 함께 이동" 체크박스 (기본 off)
+            └─→ "이 Chat의 전용 Asset도 함께 이동" 체크박스 (기본 off)
                     └─→ 체크 on: Chat + origin Asset의 project_id 일괄 업데이트
                         체크 off: Chat만 이동, Asset은 현 project_id 유지
 
@@ -711,7 +711,7 @@ Write 뷰 메인 패널 (/write 또는 /p/[pid]/write) — 경량 placeholder:
 │  │                                              │                    │
 │  │  ─────────────────────────────────────────   │  ← 구분선          │
 │  │                                              │                    │
-│  │  □ 이 Chat이 만든 Asset도 함께 이동            │  ← 체크박스 기본 off │
+│  │  □ 이 Chat의 전용 Asset도 함께 이동            │  ← 체크박스 기본 off │
 │  │    (origin_chat_id가 이 Chat인 Asset N개)     │    본문 하단 구분선 아래│
 │  │                                              │                    │
 │  │                         [취소] [이동]        │                    │
@@ -736,7 +736,7 @@ Write 뷰 메인 패널 (/write 또는 /p/[pid]/write) — 경량 placeholder:
 | Project 선택 항목 | `color-text-primary` + `color-border-subtle` border-bottom | h 42px, gap 0px (measurements) | 클릭 시 선택. 선택 상태: `color-bg-active-subtle` |
 | 구분선 | `color-border-subtle` | 1px | 선택 목록과 체크박스 구분 |
 | 체크박스 | `color-text-primary` | 16×16px (measurements) | 기본 unchecked |
-| 체크박스 라벨 | `color-text-secondary` + `text-caption` | 13px | "이 Chat이 만든 Asset도 함께 이동" + 대상 Asset 수 |
+| 체크박스 라벨 | `color-text-secondary` + `text-caption` | 13px | "이 Chat의 전용 Asset도 함께 이동" + 대상 Asset 수 |
 | 취소 버튼 | `color-text-primary` + `color-border-normal` | 80×40px, `radius-md` | — |
 | "이동" 버튼 | `color-primary` bg | 80×40px, `radius-md` | Project 선택 후 활성 |
 | 이동 중 상태 | 버튼 비활성 + 스피너 | — | — |
@@ -1097,6 +1097,7 @@ PM 명세 v0.3의 열린 질문 중 Designer 단계에서 확정하는 것.
 
 ## Changelog
 
+- 0.3 (2026-04-22): PM v0.5에 맞춰 §2-11 Chat → Project 이동 다이얼로그 체크박스 레이블 정정. "이 Chat이 만든 Asset도 함께 이동" → "이 Chat의 전용 Asset도 함께 이동". 설명문도 "다른 Chat과 재료를 공유하는 Asset은 영향받지 않습니다"로 composition 모델 정합 보강.
 - 0.2 (2026-04-21): **Composition 모델로 재설계** (PM v0.4 / 도메인 모델 v0.4 / [ADR-0016](../../architecture/decisions/0016-asset-chat-composition-model.md) 반영).
   - D3-B 사용자 피드백: "포워딩은 결국 Document에 Chat을 재료로 첨부하는 것"이라는 지적. FK 방향을 Document 쪽(`Asset.source_chat_ids[]`)으로 뒤집는 도메인 모델 전환.
   - §2-8 **통합 모달로 재작성** — 제목 + "재료 Chat 선택" 체크박스 섹션. 재료 0개=빈 Document(5-a), 1~N개=composition Document(5-c). 치수 400→480px로 확장.

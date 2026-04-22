@@ -3,6 +3,7 @@
 // Project CRUD Server Actions. ADR-0008(zod + result) + ADR-0009(Phase 1 path-based).
 // session 기반 소유권 검증 (ADR-0011).
 
+import type { Project } from '@prisma/client'
 import { revalidatePath } from 'next/cache'
 import { redirect } from 'next/navigation'
 import { z } from 'zod'
@@ -10,6 +11,14 @@ import { z } from 'zod'
 import type { ActionResult } from '@/lib/actions/types'
 import { getRequiredSession } from '@/lib/auth-session'
 import { prisma } from '@/lib/prisma'
+import { listProjectsByUser } from '@/lib/queries/project'
+
+// 현재 user의 Project 목록. 클라이언트 다이얼로그(Chat 이동 등)에서 lazy fetch용.
+export async function listUserProjectsAction(): Promise<ActionResult<Project[]>> {
+  const { user } = await getRequiredSession()
+  const projects = await listProjectsByUser(user.id)
+  return { ok: true, data: projects }
+}
 
 const nameSchema = z
   .string()
