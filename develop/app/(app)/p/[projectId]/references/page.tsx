@@ -1,7 +1,6 @@
-// Project 스코프 Reference 목록 (기능 4 D2 임시 검증 페이지).
-// D4에서 미할당 버전(/references)이 추가되고, 최종 UX는 D6에서 Liner 뷰 내부 선택
-// UI로 통합된다. 이 페이지는 Server Action + 목록 렌더 + 삭제 동작을 실제 플로우로
-// 확인하기 위한 진입점.
+// Project 스코프 Reference 목록.
+// 미할당 버전은 develop/app/(app)/references/page.tsx에 같은 컴포넌트 구조로 존재한다.
+// 사이드바 진입점(자료 노드)은 D7에서 추가됐다 (design §2-15).
 
 import { notFound } from 'next/navigation'
 
@@ -39,7 +38,7 @@ export default async function ReferencesPage({
         <ReferenceAddModal projectId={projectId} />
       </header>
 
-      <ReferenceList references={references} />
+      <ReferenceList references={references} projectId={projectId} />
     </section>
   )
 }

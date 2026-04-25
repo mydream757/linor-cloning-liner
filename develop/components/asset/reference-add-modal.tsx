@@ -11,9 +11,23 @@ import type { ActionResult } from '@/lib/actions/types'
 
 type Kind = 'url' | 'text'
 
-export function ReferenceAddModal({ projectId }: { projectId: string }) {
+type Props = {
+  // null이면 미할당 Asset 생성. 호출부가 명시적으로 null을 넘겨 의도를 드러낸다.
+  projectId: string | null
+  // 빈 상태(§2-13) CTA에서 호출 시 trigger 라벨/스타일/초기 탭을 바꾼다.
+  triggerLabel?: string
+  triggerClassName?: string
+  initialKind?: Kind
+}
+
+export function ReferenceAddModal({
+  projectId,
+  triggerLabel = '+ Reference 추가',
+  triggerClassName,
+  initialKind = 'url',
+}: Props) {
   const dialogRef = useRef<HTMLDialogElement | null>(null)
-  const [kind, setKind] = useState<Kind>('url')
+  const [kind, setKind] = useState<Kind>(initialKind)
   const [error, setError] = useState<string | null>(null)
   const [fieldErrors, setFieldErrors] = useState<Record<string, string[] | undefined>>({})
   const [pending, startTransition] = useTransition()
@@ -35,7 +49,7 @@ export function ReferenceAddModal({ projectId }: { projectId: string }) {
     setUrlExcerpt('')
     setTextTitle('')
     setTextBody('')
-    setKind('url')
+    setKind(initialKind)
   }
 
   function openDialog() {
@@ -52,6 +66,8 @@ export function ReferenceAddModal({ projectId }: { projectId: string }) {
     setError(null)
     setFieldErrors({})
 
+    // server action의 projectId는 z.string().min(1).optional() — null은 undefined로 정규화.
+    const projectIdForPayload = projectId ?? undefined
     const payload =
       kind === 'url'
         ? {
@@ -59,13 +75,13 @@ export function ReferenceAddModal({ projectId }: { projectId: string }) {
             title: urlTitle,
             url: urlValue,
             excerpt: urlExcerpt || undefined,
-            projectId,
+            projectId: projectIdForPayload,
           }
         : {
             kind: 'text' as const,
             title: textTitle || undefined,
             text: textBody,
-            projectId,
+            projectId: projectIdForPayload,
           }
 
     startTransition(async () => {
@@ -91,9 +107,12 @@ export function ReferenceAddModal({ projectId }: { projectId: string }) {
       <button
         type="button"
         onClick={openDialog}
-        className="h-9 rounded-md bg-primary px-3 text-[13px] font-medium text-text-primary hover:opacity-90"
+        className={
+          triggerClassName ??
+          'h-9 rounded-md bg-primary px-3 text-[13px] font-medium text-text-primary hover:opacity-90'
+        }
       >
-        + Reference 추가
+        {triggerLabel}
       </button>
 
       <dialog

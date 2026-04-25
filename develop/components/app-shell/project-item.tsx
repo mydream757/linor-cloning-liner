@@ -8,9 +8,10 @@
 import * as DropdownMenu from '@radix-ui/react-dropdown-menu'
 import type { Chat, Project } from '@prisma/client'
 import Link from 'next/link'
-import { useRouter } from 'next/navigation'
+import { usePathname, useRouter } from 'next/navigation'
 import { useActionState, useEffect, useRef, useTransition } from 'react'
 
+import { FilesIcon } from '@/components/app-shell/icons'
 import { ChatListClient } from '@/components/chat/chat-list-client'
 import { createChat } from '@/lib/actions/chat'
 import { deleteProject, renameProject } from '@/lib/actions/project'
@@ -45,10 +46,33 @@ export function ProjectItem(props: Props) {
       )}
       {props.isExpanded ? (
         <div className="mt-1 max-h-60 overflow-y-auto pl-4">
+          <ReferencesLink projectId={props.project.id} />
           <ChatListClient chats={props.chats} />
         </div>
       ) : null}
     </div>
+  )
+}
+
+// ---------- References link (design/features/4-asset.md §2-15) ----------
+
+// Project 펼침 블록의 Chat 목록 위 최상단 "자료" 노드.
+// 활성 상태는 pathname이 정확히 /p/[projectId]/references일 때.
+function ReferencesLink({ projectId }: { projectId: string }) {
+  const pathname = usePathname()
+  const isActive = pathname === `/p/${projectId}/references`
+
+  return (
+    <Link
+      href={`/p/${projectId}/references`}
+      aria-current={isActive ? 'page' : undefined}
+      className={`flex h-7.5 items-center gap-2 rounded-md px-2 text-[13px] text-text-secondary hover:bg-bg-hover hover:text-text-primary ${
+        isActive ? 'bg-bg-active-subtle font-medium text-text-primary' : ''
+      }`}
+    >
+      <FilesIcon />
+      <span>자료</span>
+    </Link>
   )
 }
 

@@ -111,9 +111,11 @@ export async function createReference(
         },
       }))
 
-  // Project 스코프면 해당 Project의 references 페이지 revalidate.
+  // 영향 받는 references 페이지 revalidate. 미할당이면 /references 미할당 목록.
   if (parsed.data.projectId) {
     revalidatePath(`/p/${parsed.data.projectId}/references`)
+  } else {
+    revalidatePath('/references')
   }
 
   return { ok: true, data: { id: asset.id } }
@@ -251,10 +253,12 @@ export async function deleteAsset(
   })
 
   // 어느 경로들에 영향 주는지:
-  //  - Asset 자체가 있던 Project(있다면)의 references 페이지
-  //  - 이 Asset을 참조하던 Message가 있는 Chat들 (D6 출처 패널 실데이터 연결 이후 관련. D2에서는 Project 스코프만)
+  //  - Asset이 속한 references 페이지 (Project 스코프 또는 미할당)
+  //  - 이 Asset을 참조하던 Message가 있는 Chat들 (D6 출처 패널 실데이터 연결 이후 관련)
   if (existing.projectId) {
     revalidatePath(`/p/${existing.projectId}/references`)
+  } else {
+    revalidatePath('/references')
   }
 
   return { ok: true, data: { id: parsed.data.id } }
