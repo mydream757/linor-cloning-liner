@@ -1,13 +1,13 @@
 ---
 feature: Asset 관리 (Reference + Document) + 미할당 Chat
-version: 0.3
-last_updated: 2026-04-22
+version: 0.4
+last_updated: 2026-04-23
 ---
 
 # Asset 관리 (Reference + Document) + 미할당 Chat — 화면 설계
 
 > 참조
-> - 기능 명세: [`plan/features/4-asset.md`](../../plan/features/4-asset.md) v0.4
+> - 기능 명세: [`plan/features/4-asset.md`](../../plan/features/4-asset.md) v0.6
 > - 전역 토큰: [`../design-tokens.md`](../design-tokens.md) v0.6
 > - 실측·스크린샷: [`../references/4-asset/measurements.md`](../references/4-asset/measurements.md) v0.3
 > - 관련 ADR: [ADR-0014](../../architecture/decisions/0014-asset-schema-polymorphic-single-table.md), [ADR-0015](../../architecture/decisions/0015-unassigned-route-structure.md), [ADR-0016](../../architecture/decisions/0016-asset-chat-composition-model.md)
@@ -889,6 +889,112 @@ Asset 목록 로딩:
 
 ---
 
+### 2-15. 사이드바 Reference 진입점
+
+PM 명세 v0.6 §5 "사이드바 Reference 진입점 — D7 범위로 편입" 결정 + 사용자 추가 결정(하위 최상단 위치, 파일 아이콘) 반영. 기존 사이드바 Project 노드의 caret 펼침 패턴(§2-1 / project-item.tsx)을 계승하며, "자료" 노드를 Chat 목록 **위에** 상시 표시한다.
+
+#### Project 스코프 — "자료" 노드
+
+Project를 펼쳤을 때 Chat 목록 최상단에 "자료" 노드가 위치한다.
+
+```
+사이드바 — Project 펼침 상태:
+┌─────────────────────────────┐
+│  + 새 대화                   │  ← 전역 버튼
+│  + 새 Project                │
+│                             │
+│  프로젝트                     │
+│  ▾ Project A                │  ← caret 클릭으로 펼침/접힘 (기존 패턴)
+│    ┌───────────────────────┐│
+│    │ 📄 자료               ││  ← "자료" 노드: Chat 목록 위 최상단 (신규)
+│    └───────────────────────┘│
+│      Chat 1                 │  ← 기존 Chat 항목들
+│      Chat 2                 │
+│  ▸ Project B                │  ← 접힌 상태 (자료 노드 미노출)
+│                             │
+│  최근 기록                   │
+│  ● Chat X                   │
+└─────────────────────────────┘
+```
+
+**구성 요소 — "자료" 노드**:
+
+| 요소 | 토큰 | 치수 | 비고 |
+|---|---|---|---|
+| 노드 컨테이너 | 투명 bg + hover: `color-bg-hover` | h 30px (Project Chat 항목 32px와 유사), w 244px `radius-sm`(6px) | `pl-4` 들여쓰기(Project 항목과 동일 depth) |
+| 파일 아이콘 | `color-text-secondary` | 14×14px | lucide-react `Files` (복수 파일 의미. "자료 목록" 표현) |
+| "자료" 레이블 | `color-text-secondary` | `text-caption`(13px) / 400 | default 상태. 클릭 시 → `/p/[projectId]/references` |
+| 아이콘-레이블 gap | — | `space-sm`(8px) | — |
+| 좌우 padding | — | `space-sm`(8px) | — |
+
+**상태**:
+
+| 상태 | 변화 |
+|---|---|
+| default | 투명 bg, `color-text-secondary` 텍스트·아이콘 |
+| hover | `color-bg-hover` bg. 텍스트·아이콘 `color-text-primary`로 밝아짐 |
+| active (현재 페이지) | `color-bg-active-subtle` bg, `color-text-primary` 텍스트·아이콘 |
+| focus (키보드) | `color-focus-ring` |
+
+**클릭 동작**: `/p/[projectId]/references` 라우트로 이동. 기존 D2에서 임시로 URL 직접 입력으로만 접근하던 페이지를 사이드바에서 직접 진입 가능하게 한다.
+
+**펼침/접힘 연동**: "자료" 노드는 Project를 caret으로 펼치면 **항상 Chat 목록과 함께 노출**된다. 별도 토글 없음 — Chat 목록과 동등 레벨의 항목으로 상시 노출. 프로젝트가 접힌 상태에서는 보이지 않는다.
+
+**전역 토큰 참조**: `color-text-secondary`, `color-text-primary`, `color-bg-hover`, `color-bg-active-subtle`, `color-focus-ring`, `radius-sm`, `space-sm`, `text-caption`
+
+---
+
+#### 미할당 영역 — Reference 진입점
+
+미할당 영역(Project 미소속 상태)의 Reference 목록은 `/references` 라우트로 신규 생성된다. 사이드바 진입점은 **"최근 기록" 섹션 상단**, "미할당 Chat + Document" 목록과 구분되도록 별도 고정 링크로 배치한다.
+
+```
+사이드바 — 미할당 영역 진입점:
+┌─────────────────────────────┐
+│  + 새 대화                   │
+│  + 새 Project                │
+│                             │
+│  프로젝트                     │
+│  ▾ Project A                │
+│    📄 자료                   │  ← Project 스코프 진입점 (위 §2-15 참조)
+│      Chat 1                 │
+│                             │
+│  최근 기록                   │
+│  ┌───────────────────────┐  │
+│  │ 📄 미할당 자료          │  │  ← 미할당 Reference 진입점 (신규, 고정)
+│  └───────────────────────┘  │
+│  ● Chat X (미할당)           │  ← 기존 미할당 Chat
+│    Chat Y (Project A)        │
+└─────────────────────────────┘
+```
+
+**구성 요소 — "미할당 자료" 고정 링크**:
+
+| 요소 | 토큰 | 치수 | 비고 |
+|---|---|---|---|
+| 링크 컨테이너 | 투명 bg + hover: `color-bg-hover` | h 30px, w 244px, `radius-sm` | "최근 기록" 섹션 헤더 바로 아래, Chat/Document 항목 위에 고정 |
+| 파일 아이콘 | `color-text-secondary` | 14×14px | lucide-react `Files` (Project 스코프와 동일 아이콘 — 일관성) |
+| "미할당 자료" 레이블 | `color-text-secondary` | `text-caption`(13px) / 400 | 클릭 시 → `/references` |
+| 아이콘-레이블 gap | — | `space-sm`(8px) | — |
+| 좌우 padding | — | `space-sm`(8px) | — |
+
+**상태**:
+
+| 상태 | 변화 |
+|---|---|
+| default | 투명 bg, `color-text-secondary` |
+| hover | `color-bg-hover` bg, `color-text-primary` |
+| active | `color-bg-active-subtle` bg, `color-text-primary` |
+| focus | `color-focus-ring` |
+
+**클릭 동작**: `/references` 라우트로 이동. 미할당 Reference 목록(`listUnassignedReferencesByUser` 쿼리 — D2에서 이미 존재)을 표시하는 신규 페이지.
+
+**위치 결정 근거**: "최근 기록" 섹션은 시간순 최근 Chat/Document가 모이는 영역으로 사용자의 현재 작업 맥락을 보여준다. 미할당 자료 진입점을 이 섹션 최상단에 고정함으로써 "미할당 컨텍스트에서의 Reference 접근"이 Chat/Document와 동등한 위계로 노출된다. 별도 섹션(예: "자료"를 독립 섹션으로)을 두면 사이드바 섹션 수가 늘어나 인지 부하가 증가한다. "최근 기록" 섹션 상단 고정이 현재 사이드바 정보 구조와 가장 적은 충돌로 통합되는 위치다.
+
+**전역 토큰 참조**: `color-text-secondary`, `color-text-primary`, `color-bg-hover`, `color-bg-active-subtle`, `color-focus-ring`, `radius-sm`, `space-sm`, `text-caption`
+
+---
+
 ## 3. 상태 매트릭스
 
 | 화면/요소 | default | hover | active(선택) | focus | disabled | loading | error |
@@ -1053,6 +1159,35 @@ PM 명세 Q4의 방향 결정을 UI에서 구체화한다.
 
 ---
 
+### (7) 사이드바 Reference 진입점 — Project 트리 하위 최상단(자료 노드) + 미할당은 "최근 기록" 상단 고정
+
+PM 명세 v0.6 §5에서 "사이드바 Reference 진입점 — D7 범위로 편입"이 결정됐고, 사용자가 구체적인 위치와 아이콘을 추가 결정(Project 트리 하위 최상단 / 파일 아이콘)했다.
+
+**Project 스코프 "자료" 노드 — 위치 결정**:
+
+| 대안 | 장점 | 단점 | 선택 여부 |
+|---|---|---|---|
+| **Chat 목록 위 최상단 (채택)** | 프로젝트 펼침 시 즉시 눈에 띔. "자료"가 Chat보다 "프로젝트의 맥락 소스"로서 앞에 오는 것이 직관적 | Chat이 주 진입점인 사용자에게 "자료"가 약간 앞을 차지할 수 있음 | **채택** (사용자 결정) |
+| Chat 목록 아래 최하단 | Chat이 주 진입점이므로 방해 없음 | 하단은 시각적으로 자주 숨김. 자료 진입 빈도가 낮아짐 | 기각 |
+| 별도 상단 액션 (Project 항목 행 우측) | 항상 노출 (접힌 상태에서도) | Project 항목 행이 좁아 아이콘 버튼 추가 시 crowded. 기존 "+" / "⋯" 버튼과 충돌 | 기각 |
+
+**아이콘 — `Files` 선택 근거**: lucide-react의 `Files`는 복수 파일 아이콘으로, "자료 목록"이라는 개념을 단일 파일(`File`)보다 자연스럽게 표현한다. `FileText`는 단일 문서 문서의 뉘앙스가 강해 Reference 목록(복수)을 나타내기에 `Files`가 더 적합하다. `Folder`는 Directory 개념 혼동 우려.
+
+**"자료" 노드 vs 별도 자료 섹션 비교**:
+
+| 대안 | 장점 | 단점 | 선택 여부 |
+|---|---|---|---|
+| **Project 하위 항목으로 표현 (채택)** | Project 트리의 기존 패턴(caret → 하위 항목)을 그대로 계승. 신규 패턴 없음 | — | **채택** |
+| Project 노드 위에 별도 "자료" 섹션 | 항상 노출 | 사이드바에 섹션 과잉. "프로젝트별 자료"와 "전체 자료"를 혼동할 우려 | 기각 |
+
+**미할당 진입점 위치 — "최근 기록" 상단 고정**:
+
+미할당 영역은 별도 섹션을 추가하지 않고, 기존 "최근 기록" 섹션의 최상단에 "미할당 자료" 고정 링크를 배치한다. Chat/Document가 시간순으로 쌓이는 공간 위에 Reference 진입점을 고정하면, 사이드바 섹션 수를 늘리지 않고 미할당 자료 접근성을 확보할 수 있다.
+
+**펼침/접힘과의 상호작용**: "자료" 노드는 Project caret 펼침 시 Chat 목록과 **동등 레벨로 상시 노출**된다. 별도 토글을 두면 Project 펼침 → "자료" 펼침의 2-step이 되어 접근 비용이 증가하므로, 단일 caret으로 "자료 + Chat 목록"이 한번에 펼쳐지는 설계를 채택한다.
+
+---
+
 ### (6) 미할당 Chat UI를 사이드바 "최근 기록"에 포함
 
 measurements v0.3 §열린 관찰에서 발견(원본의 "미할당 = 최근 기록" 매핑). 원본 Liner는 미할당 개념이 없고 `+` 버튼으로 만든 모든 Chat이 "최근 기록"에 쌓인다. 우리 앱도 미할당 Chat을 사이드바 "최근 기록" 섹션에 포함시킨다.
@@ -1097,6 +1232,10 @@ PM 명세 v0.3의 열린 질문 중 Designer 단계에서 확정하는 것.
 
 ## Changelog
 
+- 0.4 (2026-04-23): **사이드바 Reference 진입점 디자인 명세 추가** (D7 범위 / PM 명세 v0.6 §5 + 사용자 추가 결정 반영).
+  - **§2-15 신규 추가** — Project 스코프 "자료" 노드(Chat 목록 위 최상단, lucide `Files` 아이콘)와 미할당 영역 "미할당 자료" 고정 링크("최근 기록" 섹션 상단)를 ASCII 와이어프레임·구성 요소 표·상태 표와 함께 정의. 두 진입점 모두 기존 토큰 조합으로 표현 — 신규 전역 토큰 없음.
+  - **§5 결정 근거 (7) 신규 추가** — 위치·아이콘·펼침 연동 결정의 대안 비교와 근거 기록. PM v0.6 §5의 D7 편입 결정 + 사용자의 "하위 최상단 / 파일 아이콘" 지시를 근거로 명시.
+  - PM 명세 참조 버전 표기를 v0.4 → v0.6으로 갱신.
 - 0.3 (2026-04-22): PM v0.5에 맞춰 §2-11 Chat → Project 이동 다이얼로그 체크박스 레이블 정정. "이 Chat이 만든 Asset도 함께 이동" → "이 Chat의 전용 Asset도 함께 이동". 설명문도 "다른 Chat과 재료를 공유하는 Asset은 영향받지 않습니다"로 composition 모델 정합 보강.
 - 0.2 (2026-04-21): **Composition 모델로 재설계** (PM v0.4 / 도메인 모델 v0.4 / [ADR-0016](../../architecture/decisions/0016-asset-chat-composition-model.md) 반영).
   - D3-B 사용자 피드백: "포워딩은 결국 Document에 Chat을 재료로 첨부하는 것"이라는 지적. FK 방향을 Document 쪽(`Asset.source_chat_ids[]`)으로 뒤집는 도메인 모델 전환.

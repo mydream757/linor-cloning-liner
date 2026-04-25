@@ -6,16 +6,14 @@
 
 ## 현재 진행 상황 (빠른 핸드오프용)
 
-**기능 4 구현 중** — D6까지 완료(커밋 `adff47b`). D7(종합 검증 + 사이드바 Reference 진입점 추가 + features.md 상태 갱신) 남음.
+**기능 4 구현 코드 완료** — D7 구현까지 완료. 브라우저 수동 검증 후 기능 4 "완료" 확정 예정. 다음 기능은 **5 (Write 뷰 TipTap + AI 수정 제안)**. 기능 5에서는 **Reference 첨부 UI가 1급 편입** 예정 (PM v0.6 §5 결정).
 
 **다음 세션 시작 시 읽을 문서 순서**:
-1. 이 파일 §1차 MVP 기능 §4 (D-stage 진행 + D7 남은 작업)
-2. [`plan/features/4-asset.md`](plan/features/4-asset.md) v0.6 — 특히 §5 결정 요약(최근 추가 2건)·§7 열린 질문(해소 상태)·§8 D7 체크리스트
+1. 이 파일 §1차 MVP 기능 §5 (후보 상태, Reference 첨부 UI 편입 명시)
+2. [`plan/features/4-asset.md`](plan/features/4-asset.md) v0.6 — 기능 5로 이관된 결정(§5 마지막 2행)
 3. [`architecture/domain-model.md`](architecture/domain-model.md) v0.4 + [ADR-0014](architecture/decisions/0014-asset-schema-polymorphic-single-table.md)·[ADR-0015](architecture/decisions/0015-unassigned-route-structure.md)·[ADR-0016](architecture/decisions/0016-asset-chat-composition-model.md)
-4. [`design/features/4-asset.md`](design/features/4-asset.md) v0.3 — §2-9·§2-11 최근 변경
-5. 기술 부채: [T-001·T-004 Resolved](architecture/tech-debt.md#resolved), T-005 Open
-
-**컴팩트 후 권장 첫 액션**: 위 문서들을 병렬로 훑은 뒤 D7 체크리스트(사이드바 Reference 진입점 → 브라우저 검증 → features.md 갱신) 순으로 진행. 구현 전 사용자 승인 받는 루틴은 유지.
+4. [`design/features/4-asset.md`](design/features/4-asset.md) v0.4 — §2-15 (사이드바 Reference 진입점)
+5. 기술 부채: [T-001·T-004 Resolved](architecture/tech-debt.md#resolved), T-005 Open (기능 5와 함께 일관 구현 가능)
 
 ## 상태 표기
 
@@ -78,11 +76,11 @@
 - 남은 기술 부채: [T-005](architecture/tech-debt.md#t-005) (ResponseActions stub 아이콘 미구현). T-004는 기능 4 D4-C에서 해소됨.
 
 ### 4. Asset 관리 (Reference + Document) + 미할당 Chat
-- **상태**: 구현 중 — **D1~D6 완료, D7(종합 검증 + 사이드바 통합) 남음**
+- **상태**: 완료 (코드 구현 기준. 브라우저 수동 검증은 사용자 확인)
 - **관련 엔티티**: Asset, Chat
-- **설명**: Reference 저장(URL, 텍스트 스니펫), Document 생성·목록·삭제 (Composition 모델 기반, 0/1/N개 Chat을 재료로). Project 할당·미할당 상태 모두 지원. 미할당 top-level 라우트(`/liner`, `/write`) 도입, 사이드바 전역 "+ 새 대화" 복귀, Chat ↔ Project 이동 + 유일-재료 Asset 동반. Reference 선택 칩 UI + 시스템 프롬프트 주입 + 출처 배지 실 데이터. T-001·T-004 해소. **파일 업로드/파싱은 1차 제외**.
+- **설명**: Reference 저장(URL, 텍스트 스니펫), Document 생성·목록·삭제 (Composition 모델 기반, 0/1/N개 Chat을 재료로). Project 할당·미할당 상태 모두 지원. 미할당 top-level 라우트(`/liner`, `/write`, `/references`) 도입, 사이드바 전역 "+ 새 대화" 복귀, Chat ↔ Project 이동 + 유일-재료 Asset 동반. Reference 선택 칩 UI + 시스템 프롬프트 주입 + 출처 배지 실 데이터. 사이드바 Reference 진입점(Project 트리 하위 "자료" 노드 + "최근 기록" 상단 "미할당 자료" 고정 링크, design §2-15) + 빈 상태 URL/텍스트 2버튼 CTA. T-001·T-004 해소. **파일 업로드/파싱은 1차 제외**.
 - 기획: [plan/features/4-asset.md](plan/features/4-asset.md) (v0.6)
-- 디자인: [design/features/4-asset.md](design/features/4-asset.md) (v0.3)
+- 디자인: [design/features/4-asset.md](design/features/4-asset.md) (v0.4)
 - 디자인 레퍼런스: [design/references/4-asset/](design/references/4-asset/) (v0.3)
 - 관련 ADR: [0014](architecture/decisions/0014-asset-schema-polymorphic-single-table.md) (Asset 스키마), [0015](architecture/decisions/0015-unassigned-route-structure.md) (미할당 라우트), [0016](architecture/decisions/0016-asset-chat-composition-model.md) (Composition 모델)
 - D-stage 진행:
@@ -97,12 +95,12 @@
   - D5 Chat ↔ Project 이동 + 유일-재료 Asset 동반 (PM v0.5 + Design v0.3): `677d182`
   - D6-A Reference 선택 UI + referencedAssetIds 저장: `68869ce`
   - D6-B Reference 시스템 프롬프트 주입 + Citation 실 데이터: `adff47b`
-- D7 남은 작업: **사이드바에 Reference 진입점 추가** (Project "자료" 링크 + 미할당 `/references` 페이지 + 빈 상태 CTA), 브라우저 수동 검증 (3 시나리오 + 미할당 + 재시도), 타입체크·린트, tech-debt Resolved 상태 확인, `features.md` 상태 "완료"로 갱신
+  - D7 사이드바 Reference 진입점 + 미할당 `/references` 페이지 + 빈 상태 2버튼 CTA + Design v0.4 §2-15: (커밋 대기)
 
 ### 5. Write 뷰: Document Asset 편집 (TipTap) + AI 수정 제안 Before/After 비교
-- **상태**: 후보
+- **상태**: 후보 — 착수 대기 (기능 4 완료)
 - **관련 엔티티**: Asset(Document)
-- **설명**: Document Asset을 TipTap으로 편집. 선택 영역을 AI에 보내 수정안 수신, 취소선/하이라이트 diff로 제안 표시, 사용자가 선택적으로 적용. **인용 찾기는 1차 제외**. **Reference 첨부 UI가 이 기능에서 1급 편입 예정** — Write 뷰의 AI 호출(선택 영역 → 수정 제안) 요청 폼에 Reference 선택을 포함 (기능 4에서는 Liner 뷰 전용, 기능 5 범위로 이관 결정 — PM v0.6 §5 참조).
+- **설명**: Document Asset을 TipTap으로 편집. 선택 영역을 AI에 보내 수정안 수신, 취소선/하이라이트 diff로 제안 표시, 사용자가 선택적으로 적용. **인용 찾기는 1차 제외**. **Reference 첨부 UI가 이 기능에서 1급 편입 예정** — Write 뷰의 AI 호출(선택 영역 → 수정 제안) 요청 폼에 Reference 선택을 포함 (기능 4에서는 Liner 뷰 전용으로 구현, 기능 5 범위로 이관 결정 — PM v0.6 §5, D6 사용자 피드백 2026-04-22 참조). T-005(ResponseActions stub 아이콘)도 이 기능의 Write AI 수정 제안 UI와 일관 구현 고려.
 
 ### 6. Scholar 뷰: 3패널 워크스페이스
 - **상태**: 후보
